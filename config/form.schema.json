@@ -1,0 +1,142 @@
+{
+  "version": "1.0.0",
+  "ticketTypes": [
+    {
+      "id": "beschaffung",
+      "label": "Antrag auf Hard- und Softwarebeschaffung / Rückerstattung",
+      "fields": [
+        { "name": "name", "type": "text", "label": "Antragsteller Name", "required": true },
+        { "name": "titel", "type": "text", "label": "Titel", "required": true },
+        { "name": "rolle", "type": "text", "label": "Rolle", "required": true },
+        { "name": "kostenstelle", "type": "text", "label": "Kostenstelle", "required": true },
+        { "name": "art", "type": "select", "label": "Art des Antrags", "options": ["Hardware", "Software"], "required": true },
+        { "name": "beschreibung", "type": "textarea", "label": "Beschreibung der gewünschten Beschaffung", "required": true },
+        { "name": "begruendung", "type": "textarea", "label": "Begründung / Bedarf", "required": true },
+        { "name": "anzahl", "type": "number", "label": "Anzahl / Menge", "required": true },
+        { "name": "modell", "type": "text", "label": "Gewünschtes Modell / Hersteller", "required": false },
+        { "name": "kosten", "type": "number", "label": "Preis / Kosten", "required": false },
+        { "name": "produktlink", "type": "url", "label": "Link zum Produkt", "required": false },
+        { "name": "prio", "type": "select", "label": "Priorität", "options": ["niedrig","mittel","hoch"], "required": true },
+        { "name": "faelligkeit", "type": "date", "label": "Fälligkeitsdatum", "required": false },
+        { "name": "vergabevermerk", "type": "file", "label": "Vergabevermerk", "required": true },
+        { "name": "buchungsbeleg", "type": "file", "label": "Buchungsbeleg", "required": true }
+      ]
+    },
+    {
+      "id": "software-installation",
+      "label": "Antrag auf Installation / Update von Software",
+      "fields": [
+        { "name": "softwarename", "type": "text", "label": "Software (Name und Version)", "required": true },
+        { "name": "lizenziert", "type": "checkbox", "label": "Ist die Software lizenziert?", "required": false },
+        { "name": "lizenzErforderlich", "type": "select", "label": "Lizenz erforderlich?", "options": ["ja","nein","bitte prüfen"], "required": true },
+        { "name": "lizenzinfo", "type": "textarea", "label": "Lizenzinformation / Schlüssel", "required": false },
+        { "name": "ort", "type": "select", "label": "Ort der Installation", "options": ["Laborraum","VDI-Umgebung"], "required": true },
+        { "name": "laborraeume", "type": "multiselect", "label": "Laborräume", "options": ["A209","A210","A214","A236","A142","A143","A013"], "required": true },
+        { "name": "vdiDetail", "type": "text", "label": "VDI Detailangabe", "required": true },
+        { "name": "zeitpunkt", "type": "date", "label": "Zeitpunkt / Frist (nicht während Semester)", "required": true },
+        { "name": "grund", "type": "textarea", "label": "Grund für Installation/Update", "required": true },
+        { "name": "abhaengigkeitVorhanden", "type": "checkbox", "label": "Abhängigkeiten zu anderer Software?", "required": true },
+        { "name": "abhaengigkeitDetail", "type": "text", "label": "Welche Abhängigkeit?", "required": true },
+        { "name": "funktionstest", "type": "file", "label": "Prüfung der Funktionalität (z. B. Code-Snippet)", "required": false }
+      ],
+      "rules": [
+        { "if": { "field": "ort", "equals": "VDI-Umgebung" }, "then": { "require": ["vdiDetail"], "show": ["vdiDetail"] } },
+        { "if": { "field": "abhaengigkeitVorhanden", "equals": true }, "then": { "require": ["abhaengigkeitDetail"], "show": ["abhaengigkeitDetail"] } }
+      ]
+    },
+    {
+      "id": "stoerung-hardware",
+      "label": "Störmeldung: Hardware- und Peripheriedefekte",
+      "fields": [
+        { "name": "labor", "type": "text", "label": "Betroffenes Labor", "required": true },
+        { "name": "geraetetyp", "type": "select", "label": "Gerätetyp", "options": ["Monitor","PC","Beamer","Drucker"], "required": true },
+        { "name": "inventarnummer", "type": "text", "label": "Gerätekennung / Inventarnummer", "required": true },
+        { "name": "fotoInventar", "type": "file", "label": "Foto der Inventarnummer", "required": false },
+        { "name": "fehlerbeschreibung", "type": "textarea", "label": "Fehlerbeschreibung", "required": true },
+        { "name": "prio", "type": "select", "label": "Priorität", "options": ["gering","mittel","hoch","sehr hoch (Blocker)"], "required": true },
+        { "name": "reproduzierbarkeit", "type": "textarea", "label": "Wie ist der Fehler reproduzierbar?", "required": true }
+      ]
+    },
+    {
+      "id": "stoerung-software",
+      "label": "Störmeldung: Softwarefehler",
+      "fields": [
+        { "name": "software", "type": "text", "label": "Software (Name und Version)", "required": true },
+        { "name": "beschreibung", "type": "textarea", "label": "Fehlerbeschreibung", "required": true },
+        { "name": "zeitpunkt", "type": "date", "label": "Zeitpunkt des Auftretens", "required": false },
+        { "name": "ort", "type": "text", "label": "Ort (Laborraum, Gerät, VDI)", "required": true },
+        { "name": "screenshots", "type": "file", "label": "Screenshots", "required": false },
+        { "name": "reproduzierbar", "type": "select", "label": "Reproduzierbarkeit", "options": ["ja","nein"], "required": true },
+        { "name": "reproduktionsschritte", "type": "textarea", "label": "Reproduktionsschritte", "required": true }
+      ],
+      "rules": [
+        { "if": { "field": "reproduzierbar", "equals": "ja" }, "then": { "require": ["reproduktionsschritte"], "show": ["reproduktionsschritte"] } }
+      ]
+    },
+    {
+      "id": "vm-antrag",
+      "label": "Antrag auf Bereitstellung von VMs",
+      "fields": [
+        { "name": "betriebssystem", "type": "select", "label": "Betriebssystem", "options": ["Linux","Windows"], "required": true },
+        { "name": "zweck", "type": "text", "label": "Zweck der VM", "required": true },
+        { "name": "verantwortlich", "type": "text", "label": "Verantwortliche Person", "required": true },
+        { "name": "bezeichnung", "type": "text", "label": "Bezeichnung der VM", "required": true },
+        { "name": "disk", "type": "number", "label": "Festplatte (GB)", "required": true },
+        { "name": "ram", "type": "number", "label": "RAM (GB)", "required": true },
+        { "name": "cpu", "type": "number", "label": "Prozessorkerne", "required": true },
+        { "name": "projekt", "type": "checkbox", "label": "Ist Zweck der VM ein Projekt?", "required": false },
+        { "name": "projektende", "type": "date", "label": "Projektende", "required": true },
+        { "name": "erreichbarkeit", "type": "select", "label": "Erreichbarkeit", "options": ["intern","extern"], "required": true }
+      ],
+      "rules": [
+        { "if": { "field": "projekt", "equals": true }, "then": { "require": ["projektende"], "show": ["projektende"] } }
+      ]
+    },
+    {
+      "id": "user-antrag",
+      "label": "Antrag auf Bereitstellung von Usern",
+      "fields": [
+        { "name": "anzahl", "type": "number", "label": "Anzahl benötigter Accounts", "required": true },
+        { "name": "art", "type": "select", "label": "Art des Users/Systems", "options": ["Gast","Klausur","SAP","VDI"], "required": true },
+        { "name": "studiengang", "type": "text", "label": "Studiengang", "required": true },
+        { "name": "fachbereich", "type": "text", "label": "Fachbereich", "required": true },
+        { "name": "professor", "type": "text", "label": "Professor", "required": true },
+        { "name": "zeitraum", "type": "date", "label": "Gültigkeitszeitraum", "required": true },
+        { "name": "verwendungszweck", "type": "textarea", "label": "Verwendungszweck", "required": true },
+        { "name": "systemzugang", "type": "multiselect", "label": "Zugang zu Systemen", "options": ["SAP","Moodle"], "required": false },
+        { "name": "autoloeschen", "type": "select", "label": "Sollen die Accounts automatisch gelöscht werden?", "options": ["ja","nein"], "required": true },
+        { "name": "ansprechpartner", "type": "text", "label": "Ansprechpartner", "required": true }
+      ]
+    },
+    {
+      "id": "klausur-antrag",
+      "label": "Antrag auf Unterstützung bei Klausuren",
+      "fields": [
+        { "name": "zeit", "type": "datetime", "label": "Datum/Uhrzeit", "required": true },
+        { "name": "labor", "type": "multiselect", "label": "Betroffenes Labor", "options": ["A209","A210","A214","A236","A142","A143","A013","A116","A216","A216b"], "required": true },
+        { "name": "teilnehmende", "type": "number", "label": "Anzahl Teilnehmende", "required": true },
+        { "name": "unterstuetzung", "type": "select", "label": "Benötigte Unterstützung", "options": ["Aufsicht","Technische Einrichtung","VDI-Login"], "required": true },
+        { "name": "anforderungen", "type": "textarea", "label": "Technische Anforderungen", "required": true },
+        { "name": "dauer", "type": "number", "label": "Dauer (h)", "required": true },
+        { "name": "ansprechpartner", "type": "text", "label": "Ansprechpartner während Klausur", "required": true }
+      ]
+    },
+    {
+      "id": "rueckerstattung",
+      "label": "Antrag auf Rückerstattung",
+      "fields": [
+        { "name": "name", "type": "text", "label": "Antragsteller Name", "required": true },
+        { "name": "titel", "type": "text", "label": "Titel", "required": true },
+        { "name": "rolle", "type": "text", "label": "Rolle", "required": true },
+        { "name": "kostenstelle", "type": "text", "label": "Kostenstelle", "required": true },
+        { "name": "beschreibung", "type": "textarea", "label": "Beschreibung der Beschaffung", "required": true },
+        { "name": "begruendung", "type": "textarea", "label": "Begründung / Bedarf", "required": true },
+        { "name": "anzahl", "type": "number", "label": "Anzahl / Menge", "required": true },
+        { "name": "hersteller", "type": "text", "label": "Hersteller", "required": false },
+        { "name": "betrag", "type": "number", "label": "Betrag (€)", "required": true },
+        { "name": "vergabevermerk", "type": "file", "label": "Vergabevermerk", "required": true },
+        { "name": "buchungsbeleg", "type": "file", "label": "Buchungsbeleg", "required": true }
+      ]
+    }
+  ]
+}
