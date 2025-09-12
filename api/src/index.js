@@ -1,8 +1,9 @@
+import 'dotenv/config';
 import { createServer } from './server.js';
 
-const PORT = process.env.PORT || 3000;
+const port = process.env.PORT || 3000;
 const app = createServer();
 
-app.listen(PORT, () => {
-  console.log(`✅ API läuft auf http://localhost:${PORT}`);
+app.listen(port, () => {
+  console.log(`✅ API läuft auf http://localhost:${port}`);
 });

@@ -1,35 +1,34 @@
 import nodemailer from 'nodemailer';
-import { config } from '../config/env.js';
 
-const transporter = nodemailer.createTransport({
-  host: config.smtpHost,
-  port: config.smtpPort,
-  secure: false,
-  auth: config.smtpUser ? { user: config.smtpUser, pass: config.smtpPass } : undefined
-});
+function getTransport() {
+  const host = process.env.SMTP_HOST ?? '127.0.0.1';
+  const port = Number(process.env.SMTP_PORT ?? 1025);
+  const secure = String(process.env.SMTP_SECURE ?? 'false') === 'true';
+  const user = process.env.SMTP_USER;
+  const pass = process.env.SMTP_PASS;
 
-export async function sendTicketMail(ticketType, payload, attachments) {
-  const subject = `[Ticket] ${ticketType}`;
-  const html = `<h3>${subject}</h3><pre>${escapeHtml(JSON.stringify(payload, null, 2))}</pre>`;
-
-  const info = await transporter.sendMail({
-    from: config.fromAddr,
-    to: config.ticketInbox,
-    subject,
-    html,
-    text: JSON.stringify(payload, null, 2),
-    attachments: attachments.map(a => ({
-      filename: a.name,
-      content: Buffer.from(a.base64, 'base64'),
-      contentType: a.mime
-    }))
+  return nodemailer.createTransport({
+    host, port, secure,
+    auth: user && pass ? { user, pass } : undefined
   });
-
-  return info.messageId;
 }
 
-function escapeHtml(s) {
-  return s.replace(/[&<>"']/g, m => (
-    { '&':'&amp;', '<':'&lt;', '>':'&gt;', '"':'&quot;', "'":'&#39;' }[m]
-  ));
+export async function sendTicketMail(data) {
+  const transporter = getTransport();
+  const from = process.env.FROM_ADDR ?? 'tickets@hochschule.local';
+  const to   = process.env.TICKET_EINGANG ?? 'ticketsystem@hochschule.local';
+
+  const subject = `[Ticket] ${data.category} – ${data.subject} (Urgency: ${data.urgency})`;
+  const text = [
+    `Name: ${data.name}`,
+    `E-Mail: ${data.email}`,
+    `Kategorie: ${data.category}`,
+    `Priorität: ${data.urgency}`,
+    `Betreff: ${data.subject}`,
+    '',
+    'Beschreibung:',
+    data.description
+  ].join('\n');
+
+  return transporter.sendMail({ from, to, subject, text });
 }
