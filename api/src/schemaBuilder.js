@@ -1,12 +1,28 @@
 // api/src/schemaBuilder.js
 import { z } from 'zod';
 
+
+// Hilfsfunktion: wandelt Optionslisten in reine Werte-Arrays um.
+// - Input: ["low","medium","high"] oder [{value:"low",label:"niedrig"},...]
+// - Output: ["low","medium","high"]
 function toEnumValues(opts = []) {
   const vals = opts.map((o) => (typeof o === 'string' ? o : o.value));
   if (!vals.length) throw new Error('select requires options');
   return vals;
 }
 
+
+
+// Baut für ein einzelnes Feld den passenden Zod-Typ.
+// → abhängig von field.type
+// Beispiele:
+// - text/textarea → string, optional minLength
+// - email/url → spezielle String-Validierung
+// - number → coercion zu number + min/max/int
+// - select → z.enum([...])
+// - multiselect → Array von Enums
+// - date → Regex YYYY-MM-DD
+// - file → nur Platzhalter (Prüfung später separat)
 function zodForField(f) {
   const s = z.string().trim();
   switch (f.type) {
@@ -15,8 +31,8 @@ function zodForField(f) {
     case 'email':    return z.string().trim().email();
     case 'url':      return z.string().trim().url();
     case 'number': {
-      let num = z.coerce.number();
-      if (f.integer) num = num.int();
+      let num = z.coerce.number(); // akzeptiert auch String, wandelt zu number
+      if (f.integer) num = num.int(); // Ganzzahlpflicht
       if (f.min !== undefined) num = num.min(f.min);
       if (f.max !== undefined) num = num.max(f.max);
       return num;
@@ -24,22 +40,26 @@ function zodForField(f) {
     case 'select':      return z.enum(toEnumValues(f.options));
     case 'multiselect': return z.array(z.enum(toEnumValues(f.options)));
     case 'date':        return z.string().regex(/^\d{4}-\d{2}-\d{2}$/, 'YYYY-MM-DD');
-    case 'file':        return z.any(); // Dateien prüfen wir separat
+    case 'file':        return z.any(); // Datei wird später (Upload-Check) geprüft
     default:            return s;
   }
 }
 
+
+// Ergänzt .optional(), wenn das Feld nicht required ist.
 function applyRequired(zf, f) {
   return f.required ? zf : zf.optional();
 }
 
 /**
- * Baut eine discriminatedUnion('category', ...) aus reinen ZodObjects
- * und hängt die requiredIf-Validierungen EINMAL oben dran.
+ * Hauptfunktion: erzeugt ein serverseitiges Zod-Schema aus dem JSON-Schema.
+ * - Für jede Kategorie wird ein ZodObject gebaut (Basisfelder + Kategorie-Felder).
+ * - Mit discriminatedUnion('category', ...) werden alle Objekte kombiniert.
+ * - requiredIf-Regeln werden gesammelt und in einem gemeinsamen superRefine geprüft.
  */
 export function buildServerSchema(config) {
-  const objects = [];
-  const requiredIfRulesByCat = new Map();
+  const objects = []; // einzelne Zod-Objekte pro Kategorie
+  const requiredIfRulesByCat = new Map();  // Map: categoryKey → Regeln
 
   for (const cat of config.categories) {
     const shape = {};
@@ -84,6 +104,11 @@ export function buildServerSchema(config) {
 }
 
 /** Welche Upload-Felder (type=file, required) sind je Kategorie Pflicht? */
+/**
+ * Hilfsfunktion:
+ * Gibt zurück, welche Datei-Felder (type=file, required) für eine Kategorie Pflicht sind.
+ * → Wird in server.js genutzt, um Uploads separat zu prüfen.
+ */
 export function requiredUploadsForCategory(config, catKey) {
   const cat = config.categories.find(c => c.key === catKey);
   if (!cat) return [];

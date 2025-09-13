@@ -62,7 +62,6 @@
   "baseFields": [
     { "name":"name",    "label":"Name",    "type":"text",     "required": true, "minLength": 2 },
     { "name":"email",   "label":"E-Mail",  "type":"email",    "required": true },
-    { "name":"subject", "label":"Betreff", "type":"text",     "required": true, "minLength": 3 },
-    { "name":"description", "label":"Beschreibung", "type":"textarea", "required": true, "minLength": 20 }
+    { "name":"subject", "label":"Betreff", "type":"text",     "required": true, "minLength": 3 }
   ]
 }
