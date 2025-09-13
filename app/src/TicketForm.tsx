@@ -1,201 +1,89 @@
 // app/src/TicketForm.tsx
-import { useState } from 'react';
+import { useState, useMemo } from 'react';
 import { useForm } from 'react-hook-form';
-import { z } from 'zod';
 import { zodResolver } from '@hookform/resolvers/zod';
-import {
-  TextField,
-  Button,
-  Stack,
-  MenuItem,
-  CircularProgress,
-} from '@mui/material';
+import { TextField, Button, Stack, MenuItem, CircularProgress } from '@mui/material';
+import config from '../../config/form.schema.json';
+import JsonFormRenderer from '../components/JsonFormRenderer';
+import { buildClientSchema } from './lib/formSchema';
 
-const Schema = z.object({
-  name: z.string().trim().min(2, 'Bitte vollständigen Namen angeben.'),
-  email: z.string().trim().email('Ungültige E-Mail.'),
-  subject: z.string().trim().min(3, 'Mind. 3 Zeichen.'),
-  category: z.enum(['IT', 'HR', 'Facilities', 'Library', 'Other'], {
-    errorMap: () => ({ message: 'Bitte eine Kategorie wählen.' }),
-  }),
-  urgency: z.enum(['low', 'medium', 'high'], {
-    errorMap: () => ({ message: 'Bitte eine Priorität wählen.' }),
-  }),
-  description: z.string().trim().min(20, 'Mind. 20 Zeichen.'),
-});
+type FormData = any;
 
-export type FormValues = z.infer<typeof Schema>;
+const CATEGORY_OPTIONS = config.categories.map(c => ({ value: c.key, label: c.label }));
 
-type Props = {
-  onSuccess?: () => void;
-  onError?: (message: string) => void;
-};
+function buildPayload(values: any) {
+  // multipart falls Datei-Felder vorhanden
+  const hasFiles = Object.keys(values).some(k => values[k] instanceof FileList && values[k].length > 0);
+  if (!hasFiles) return { body: JSON.stringify(values), headers: { 'Content-Type': 'application/json' } };
 
-const defaultValues: FormValues = {
-  name: '',
-  email: '',
-  subject: '',
-  category: 'IT',
-  urgency: 'medium',
-  description: '',
-};
-
-function humanizeServerError(data: any, status: number) {
-  // Zeigt Validierungsdetails (vom Backend) schön an
-  if (data?.details?.fieldErrors) {
-    const parts = Object.entries<Record<string, string[]>>(data.details.fieldErrors)
-      .flatMap(([field, msgs]) => msgs.map((m) => `${field}: ${m}`));
-    if (parts.length) return parts.join(' | ');
+  const fd = new FormData();
+  for (const [k, v] of Object.entries(values)) {
+    if (v instanceof FileList) {
+      if (v[0]) fd.append(k, v[0]);
+      continue;
+    }
+    if (Array.isArray(v)) {
+      fd.append(k, v.join(',')); // Arrays als CSV (z. B. labRooms)
+      continue;
+    }
+    if (v !== undefined && v !== null) fd.append(k, String(v));
   }
-  return data?.error ? `${data.error} (HTTP ${status})` : `HTTP ${status}`;
+  return { body: fd, headers: {} as Record<string,string> };
 }
 
-export default function TicketForm({ onSuccess, onError }: Props) {
-  const {
-    register,
-    handleSubmit,
-    reset,
-    formState: { errors, isSubmitting },
-  } = useForm<FormValues>({
-    resolver: zodResolver(Schema),
-    defaultValues,
-    shouldUnregister: false, // verhindert, dass Felder nach Umschalten "verschwinden"
-    mode: 'onBlur',
-  });
-
+export default function TicketForm({ onSuccess, onError }: { onSuccess?: () => void; onError?: (m: string) => void; }) {
+  const ClientSchema = useMemo(() => buildClientSchema(config as any), []);
   const [lastError, setLastError] = useState<string | null>(null);
 
-  const onSubmit = async (values: FormValues) => {
+  const { register, handleSubmit, watch, reset, control, formState: { errors, isSubmitting } } =
+    useForm<FormData>({
+      resolver: zodResolver(ClientSchema),
+      defaultValues: { category: CATEGORY_OPTIONS[0].value },
+      shouldUnregister: false,
+      mode: 'onBlur',
+    });
+
+  const category = watch('category');
+  const currentCat = (config as any).categories.find((c: any) => c.key === category);
+
+  const onSubmit = async (values: FormData) => {
     setLastError(null);
-
-    // Debug-Hilfe: sieh im Browser-Console-Log, was rausgeht
-    // console.log('Submitting values:', values);
-
     try {
       const base = import.meta.env.VITE_API_URL ?? 'http://localhost:3000';
-      const res = await fetch(`${base}/api/tickets`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(values), // <— flach, kein { payload: … }
-      });
-
+      const { body, headers } = buildPayload(values);
+      const res = await fetch(`${base}/api/tickets`, { method: 'POST', headers, body });
       const data = await res.json().catch(() => ({}));
-      if (!res.ok) {
-        const msg = humanizeServerError(data, res.status);
-        throw new Error(msg);
-      }
-
-      // Erfolg
-      reset(defaultValues);
+      if (!res.ok) throw new Error(data?.error || `HTTP ${res.status}`);
+      reset({ category: CATEGORY_OPTIONS[0].value });
       onSuccess?.();
     } catch (e: any) {
-      const msg = e?.message ?? 'Versand fehlgeschlagen';
-      setLastError(msg);
-      onError?.(msg);
+      setLastError(e?.message ?? 'Versand fehlgeschlagen');
+      onError?.(e?.message ?? 'Versand fehlgeschlagen');
     }
   };
 
   return (
     <form onSubmit={handleSubmit(onSubmit)} noValidate>
       <Stack spacing={2}>
-        <TextField
-          label="Name"
-          placeholder="Max Mustermann"
-          {...register('name')}
-          error={!!errors.name}
-          helperText={errors.name?.message}
-          required
-          fullWidth
-        />
+        {/* Basisfelder (aus JSON) */}
+        <JsonFormRenderer fields={(config as any).baseFields} register={register} errors={errors} control={control} />
 
-        <TextField
-          label="E-Mail"
-          type="email"
-          placeholder="max@example.com"
-          {...register('email')}
-          error={!!errors.email}
-          helperText={errors.email?.message}
-          required
-          fullWidth
-        />
-
-        <TextField
-          label="Betreff"
-          placeholder="Drucker defekt"
-          {...register('subject')}
-          error={!!errors.subject}
-          helperText={errors.subject?.message}
-          required
-          fullWidth
-        />
-
-        <TextField
-          select
-          label="Kategorie"
-          {...register('category')}
-          error={!!errors.category}
-          helperText={errors.category?.message}
-          required
-          fullWidth
-        >
-          {['IT', 'HR', 'Facilities', 'Library', 'Other'].map((v) => (
-            <MenuItem key={v} value={v}>
-              {v}
-            </MenuItem>
-          ))}
+        {/* Kategorie */}
+        <TextField select label="Kategorie" {...register('category')} error={!!errors.category} helperText={(errors as any)?.category?.message as string} fullWidth required>
+          {CATEGORY_OPTIONS.map(o => <MenuItem key={o.value} value={o.value}>{o.label}</MenuItem>)}
         </TextField>
 
-        <TextField
-          select
-          label="Priorität"
-          {...register('urgency')}
-          error={!!errors.urgency}
-          helperText={errors.urgency?.message}
-          required
-          fullWidth
-        >
-          {['low', 'medium', 'high'].map((v) => (
-            <MenuItem key={v} value={v}>
-              {v}
-            </MenuItem>
-          ))}
-        </TextField>
+        {/* Dynamische Felder der Kategorie */}
+        {currentCat && (
+          <JsonFormRenderer fields={currentCat.fields} register={register} errors={errors} control={control} />
+        )}
 
-        <TextField
-          label="Beschreibung"
-          placeholder="Bitte das Problem kurz und präzise beschreiben …"
-          multiline
-          minRows={4}
-          {...register('description')}
-          error={!!errors.description}
-          helperText={errors.description?.message}
-          required
-          fullWidth
-        />
-
-        <Button
-          type="submit"
-          variant="contained"
-          disabled={isSubmitting}
-          startIcon={isSubmitting ? <CircularProgress size={18} /> : undefined}
-        >
+        <Button type="submit" variant="contained" disabled={isSubmitting}
+          startIcon={isSubmitting ? <CircularProgress size={18}/> : undefined}>
           {isSubmitting ? 'Senden …' : 'Ticket senden'}
         </Button>
 
-        {/* Optional: letzte Serverfehlermeldung unter dem Formular anzeigen */}
-        {lastError && (
-          <TextField
-            value={lastError}
-            variant="filled"
-            InputProps={{ readOnly: true }}
-            hiddenLabel
-            fullWidth
-            error
-            sx={{
-              '& .MuiInputBase-input.MuiFilledInput-input': { color: 'error.main', fontWeight: 500 },
-            }}
-          />
-        )}
+        {lastError && <div style={{ color: 'crimson', fontWeight: 600 }}>{lastError}</div>}
       </Stack>
     </form>
   );
