@@ -52,6 +52,15 @@ export function createServer() {
       if (f.type === 'number' && typeof req.body?.[f.name] === 'string') {
         req.body[f.name] = Number(req.body[f.name]);
       }
+
+      // NEU: Leere Strings bei nicht-pflichtigen String-Feldern entfernen
+      if (
+        !f.required &&
+        ['text', 'textarea', 'email', 'url', 'date'].includes(f.type) &&
+        req.body?.[f.name] === ''
+      ) {
+        delete req.body[f.name]; // oder: req.body[f.name] = undefined;
+      }
     }
 
     // Validierung gegen Schema (Zod)

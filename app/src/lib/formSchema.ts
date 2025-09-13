@@ -54,7 +54,11 @@ function zodForField(f: Field): ZodTypeAny {
     case 'text':
     case 'textarea': return f.minLength ? s.min(f.minLength) : s;
     case 'email':    return z.string().trim().email();
-    case 'url':      return z.string().trim().url();
+    case 'url': {
+    const base = z.string().trim().url();
+    // Wenn Feld nicht required ist, erlaube auch den leeren String ("")
+    return f.required ? base : z.union([z.literal(''), base]).optional();
+    }
     case 'number': {
       // coerce.number → akzeptiert z. B. "42" und wandelt in number
       let num = z.coerce.number();

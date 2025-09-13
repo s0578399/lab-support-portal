@@ -44,7 +44,6 @@ function formatValueByType(field, value) {
 // - Nutzt ein Template aus der Kategorie, globales Schema oder Default
 // - Platzhalter {category}, {subject}, ... werden durch Werte ersetzt
 function buildSubject(data, catDef) {
-function buildSubject(data, catDef) {
   const template = catDef?.subjectTemplate || schema.subjectTemplate || '[Ticket] {category} – {subject}';
   return template.replace(/\{(\w+)\}/g, (_m, key) => String(data[key] ?? ''));
 }

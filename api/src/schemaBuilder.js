@@ -29,7 +29,12 @@ function zodForField(f) {
     case 'text':
     case 'textarea': return f.minLength ? s.min(f.minLength) : s;
     case 'email':    return z.string().trim().email();
-    case 'url':      return z.string().trim().url();
+    // innerhalb deiner Zod-Mapping-Funktion fürs Serverschema:
+    case 'url': {
+      const base = z.string().trim().url();
+      return f.required ? base : z.union([z.literal(''), base]).optional();
+    }
+
     case 'number': {
       let num = z.coerce.number(); // akzeptiert auch String, wandelt zu number
       if (f.integer) num = num.int(); // Ganzzahlpflicht
