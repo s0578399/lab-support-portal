@@ -4,26 +4,42 @@
       "key": "Procurement",
       "label": "Beschaffung (Hard-/Software)",
       "fields": [
-        { "name": "applicantName",  "label": "Antragsteller (Name)", "type": "text",   "required": true, "minLength": 1 },
-        { "name": "applicantTitle", "label": "Titel",                "type": "text",   "required": true },
-        { "name": "applicantRole",  "label": "Rolle",                "type": "text",   "required": true },
-        { "name": "costCenter",     "label": "Kostenstelle",         "type": "text",   "required": true },
+        { "name": "applicantName",  "label": "Antragsteller (Name)", "type": "text",   "required": true, "minLength": 1,
+         "step": 1, "section": "Allgemein", "col": 8 },
+        { "name": "applicantTitle", "label": "Titel",                "type": "text",   "required": true, 
+         "step": 1, "section": "Allgemein", "col": 6 },
+        { "name": "applicantRole",  "label": "Rolle",                "type": "text",   "required": true, 
+        "step": 1, "section": "Allgemein", "col": 8},
+        { "name": "costCenter",     "label": "Kostenstelle",         "type": "text",   "required": true, 
+        "step": 1, "section": "Allgemein", "col": 6 },
         { "name": "requestType",    "label": "Art des Antrags",      "type": "select", "required": true,
-          "options": [ {"value":"Hardware","label":"Hardware"}, {"value":"Software","label":"Software"} ]
+          "options": [ {"value":"Hardware","label":"Hardware"}, {"value":"Software","label":"Software"} ], 
+          "step": 1, "section": "Allgemein", "col": 8
         },
-        { "name": "description",    "label": "Beschreibung",         "type": "textarea","required": true, "minLength": 20 },
-        { "name": "justification",  "label": "Begründung / Bedarf",  "type": "textarea","required": true, "minLength": 1 },
-        { "name": "quantity",       "label": "Anzahl / Menge",       "type": "number", "required": true, "min": 1, "integer": true },
-        { "name": "unit",           "label": "Einheit",              "type": "text",   "required": true },
-        { "name": "model",          "label": "Gewünschtes Modell / Hersteller", "type": "text" },
-        { "name": "price",          "label": "Preis / Kosten",       "type": "text" },
-        { "name": "productLink",    "label": "Link zum Produkt",     "type": "url", "required": false },
+        { "name": "description",    "label": "Beschreibung",         "type": "textarea","required": true, "minLength": 20, 
+        "step": 1, "section": "Beschreibung", "col": 12 },
+        { "name": "justification",  "label": "Begründung / Bedarf",  "type": "textarea","required": true, "minLength": 1,
+        "step": 1, "section": "Beschreibung", "col": 12 },
+        { "name": "quantity",       "label": "Anzahl / Menge",       "type": "number", "required": true, "min": 1, "integer": true,
+        "step": 1, "section": "Beschreibung", "col": 6 },
+        { "name": "unit",           "label": "Einheit",              "type": "text",   "required": true,
+        "step": 1, "section": "Beschreibung", "col": 10 },
+        { "name": "model",          "label": "Gewünschtes Modell / Hersteller", "type": "text",
+        "step": 1, "section": "Beschreibung", "col": 12 },
+        { "name": "price",          "label": "Preis / Kosten",       "type": "text",
+        "step": 1, "section": "Beschreibung", "col": 8 },
+        { "name": "productLink",    "label": "Link zum Produkt",     "type": "url", "required": false,
+        "step": 1, "section": "Beschreibung", "col": 12 },
         { "name": "priority",       "label": "Priorität",            "type": "select", "required": true,
-          "options": [ {"value":"low","label":"niedrig"}, {"value":"medium","label":"mittel"}, {"value":"high","label":"hoch"}, {"value":"very_high","label":"sehr hoch"} ]
+          "options": [ {"value":"low","label":"niedrig"}, {"value":"medium","label":"mittel"}, {"value":"high","label":"hoch"}, {"value":"very_high","label":"sehr hoch"} ],
+          "step": 1, "section": "Details", "col": 8
         },
-        { "name": "dueDate",        "label": "Fälligkeits-Datum",    "type": "date" },
-        { "name": "vergabeFile",    "label": "Vergabevermerk",       "type": "file",   "required": true, "accept": ["application/pdf","image/*"], "maxSizeMB": 10 },
-        { "name": "belegFile",      "label": "Buchungsbeleg",        "type": "file",   "required": true, "accept": ["application/pdf","image/*"], "maxSizeMB": 10 }
+        { "name": "dueDate",        "label": "Fälligkeits-Datum",    "type": "date",
+        "step": 1, "section": "Details", "col": 10 },
+        { "name": "vergabeFile",    "label": "Vergabevermerk",       "type": "file",   "required": true, "accept": ["application/pdf","image/*"], "maxSizeMB": 10,
+        "step": 1, "section": "Anhänge", "col": 12 },
+        { "name": "belegFile",      "label": "Buchungsbeleg",        "type": "file",   "required": true, "accept": ["application/pdf","image/*"], "maxSizeMB": 10,
+        "step": 1, "section": "Anhänge", "col": 12 }
       ]
     },
     {
@@ -193,6 +209,15 @@
   "baseFields": [
     { "name":"name",    "label":"Name",    "type":"text",     "required": true, "minLength": 2 },
     { "name":"email",   "label":"E-Mail",  "type":"email",    "required": true },
-    { "name":"subject", "label":"Betreff", "type":"text",     "required": true, "minLength": 3 }
+    { "name":"subject", "label":"Betreff", "type":"text",     "required": true, "minLength": 3 },
+    { "name": "priority", "label": "Priorität", "type": "select",
+      "options": ["low", "medium", "high"],
+      "required": true,
+      "step": 1, "section": "Ticket-Details", "col": 3
+    },
+    { "name": "subject", "label": "Betreff", "type": "text",
+      "required": true,
+      "step": 1, "section": "Ticket-Details", "col": 9
+    }
   ]
 }
