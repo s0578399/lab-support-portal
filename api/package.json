@@ -6,7 +6,7 @@
   "scripts": {
     "start": "node src/index.js",
     "dev": "NODE_ENV=development node src/index.js",
-    "test": "vitest run"
+    "test": "jest --runInBand"
   },
   "dependencies": {
     "cors": "^2.8.5",
