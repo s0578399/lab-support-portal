@@ -7,9 +7,8 @@ import {
   Box, Container, Paper, Stack, Typography, Avatar,
   Stepper, Step, StepLabel, Button, Snackbar, Alert, TextField, MenuItem, Grid
 } from "@mui/material";
-// ⚠️ Logo aus public/ verwenden (Datei: /public/htw-logo.jpg)
-//    Bitte Leerzeichen aus Dateinamen entfernen, dann:
-const logoSrc = "/htw-logo.jpg";
+// Logo aus public/ verwenden (Datei: /public/htw-logo.jpg)
+const logoSrc = "../../htw-logo.jpg";
 
 import formConfig from "../../config/form.schema.json";
 import type { FormConfig, Category } from "./lib/formSchema";
@@ -150,11 +149,18 @@ export default function TicketForm() {
         </Box>
       </Container>
 
-      <Snackbar open={snack.open} autoHideDuration={2500} onClose={() => setSnack((s) => ({ ...s, open: false }))}>
-        <Alert severity={snack.sev} variant="filled">
-          {snack.msg}
-        </Alert>
-      </Snackbar>
+      {snack.open && (
+        <Snackbar
+          open
+          autoHideDuration={2500}
+          onClose={() => setSnack((s) => ({ ...s, open: false }))}
+          anchorOrigin={{ vertical: 'bottom', horizontal: 'right' }} // optional
+        >
+          <Alert severity={snack.sev} variant="filled">
+            {snack.msg}
+          </Alert>
+        </Snackbar>
+      )}
     </Box>
   );
 }
