@@ -3,6 +3,8 @@ import { createServer } from "../src/server.js"; // passe den Pfad an!
 
 const app = createServer();
 
+
+// Basis-Tests die serverseitige Validierung testen
 describe("POST /api/tickets (Procurement)", () => {
   it("Happy Path → 200", async () => {
     const res = await request(app)

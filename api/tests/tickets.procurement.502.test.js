@@ -17,6 +17,7 @@ const __dirname = path.dirname(__filename);
 
 const app = createServer();
 
+// Basis-Test um Mail-Error zu testen
 describe("POST /api/tickets (Procurement) → 502 bei Mail-Fehler", () => {
   it("liefert 502, wenn der Mailversand fehlschlägt", async () => {
     const res = await request(app)
