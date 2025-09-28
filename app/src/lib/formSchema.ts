@@ -18,13 +18,13 @@ export type Field = {
   showIf?: { field: string; eq: string };
   /** Dynamische Pflicht: wenn field === eq, dann ist dieses Feld Pflicht */
   requiredIf?: { field: string; eq: string };
-  // NEW: Layout-Hinweise (optional)
+  // Layout-Hinweise (optional)
   step?: number;          // 1..n
   section?: string;       // z.B. "Kosten"
   col?: number;           // 1..12
 };
 
-// NEW: Layout-Defaults
+// Layout-Defaults
 export function layoutForField(f: Field) {
   const step = f.step ?? 1;
   const section = f.section ?? "Allgemein";
@@ -46,58 +46,112 @@ const isEmpty = (v: unknown) =>
 const normalizeOptions = (opts?: Option[]) =>
   (opts ?? []).map((o) => (typeof o === "string" ? { value: o, label: o } : o));
 
+/** Leere Eingaben zu undefined normalisieren (für optionale Felder) */
+const emptyToUndef = (v: unknown) => (v === "" || v === null || v === undefined ? undefined : v);
+
 /** Field -> Zod */
 function zodForField(f: Field): ZodTypeAny {
   switch (f.type) {
     case "text":
     case "textarea": {
-      let s = z.string().trim();
-      if (f.required) s = s.min(1, "Pflichtfeld");
-      if (typeof f.minLength === "number") s = s.min(f.minLength);
-      return s;
+      // required: min direkt auf innerem z.string(); optional: inner ggf. mit min, außen optional
+      if (f.required) {
+        const min = Math.max(1, f.minLength ?? 1);
+        const inner = z.string().trim().min(min, min > 1 ? `Mind. ${min} Zeichen` : "Pflichtfeld");
+        return z.preprocess(emptyToUndef, inner);
+      } else {
+        const inner = f.minLength
+          ? z.string().trim().min(f.minLength, `Mind. ${f.minLength} Zeichen`)
+          : z.string().trim();
+        return z.preprocess(emptyToUndef, inner).optional();
+      }
     }
     case "email": {
-      let s = z.string().trim().email("Ungültige E-Mail");
-      if (!f.required) s = s.optional();
-      return s;
+      const inner = z.string().trim().email("Ungültige E-Mail");
+      return f.required 
+        ? z.preprocess(emptyToUndef, inner)
+        : z.preprocess(emptyToUndef, inner).optional();
     }
     case "url": {
-      let s = z.string().trim().url("Ungültige URL");
-      if (!f.required) s = s.optional();
-      return s;
+      const inner = z.string().trim().url("Ungültige URL");
+      return f.required
+        ? z.preprocess(emptyToUndef, inner)
+        : z.preprocess(emptyToUndef, inner).optional();
     }
     case "number": {
-      let s = z.coerce.number({ invalid_type_error: "Zahl erwartet" });
-      if (f.required) {
-        // nichts
-      } else {
-        s = z.coerce.number().optional();
-      }
-      if (typeof f.min === "number") s = s.min(f.min);
-      if (typeof f.max === "number") s = s.max(f.max);
-      if (f.integer) s = s.int("Nur ganze Zahl");
-      return s;
+      // Inneres number-Schema zuerst konfigurieren, dann mit preprocess umwickeln
+      let inner = z.number({ invalid_type_error: "Zahl erwartet" });
+      if (f.integer) inner = inner.int("Nur ganze Zahl");
+      if (typeof f.min === "number") inner = inner.min(f.min);
+      if (typeof f.max === "number") inner = inner.max(f.max);
+
+      const coerce = z.preprocess((v) => {
+        if (v === "" || v == null) return undefined;
+        const s = typeof v === "string" ? v.replace(",", ".") : String(v);
+        const n = Number(s);
+        return Number.isFinite(n) ? n : NaN;
+      }, inner);
+
+      return f.required ? coerce : coerce.optional(); 
     }
     case "select": {
       const values = normalizeOptions(f.options).map((o) => o.value);
-      let s = z.string();
-      if (values.length) s = s.refine((v) => values.includes(v), "Ungültige Auswahl");
-      if (!f.required) s = s.optional();
-      return s;
+      const inner = z.string();
+      const withEnum = values.length
+        ? inner.refine((v) => values.includes(v), "Ungültige Auswahl")
+        : inner;
+      if (f.required) {
+        const requiredInner = withEnum.min(1, "Bitte auswählen");
+        return z.preprocess(emptyToUndef, requiredInner);
+      } else {
+        return z.preprocess(emptyToUndef, withEnum).optional();
+      }
     }
     case "multiselect": {
+      // 1) Eingabe normalisieren: '', undefined → undefined; 'a,b' → ['a','b']; Array bleibt Array
+      const normalized = z.preprocess((v) => {
+        if (v == null || v === "") return undefined;
+        if (Array.isArray(v)) return v.filter(Boolean);
+        return String(v).split(",").map((s) => s.trim()).filter(Boolean);
+      }, z.any()); // Zwischenschritt, inneres Array wird separat gebaut
+
+      // 2) Inneres Array-Schema vollständig konfigurieren
       const values = normalizeOptions(f.options).map((o) => o.value);
-      let s = z.array(z.string());
-      if (values.length) s = s.refine((arr) => arr.every((v) => values.includes(v)), "Ungültige Auswahl");
-      if (f.required) s = s.min(1, "Mind. eine Auswahl");
-      else s = s.optional();
-      return s;
+      let inner = z.array(z.string());
+      if (values.length) { // NEU!!!
+        inner = inner.refine((arr) => arr.every((x) => values.includes(x)), "Ungültige Auswahl");
+      }
+      if (f.required) { 
+        inner = inner.min(1, "Mind. eine Auswahl");
+      }
+
+      // 3) normalized → inner mappen: Wenn normalized undefined ist und nicht required, ist das okay
+      //    Das wird erreicht, indem ein Refinement auf normalizied gelegt und dann optional gesetz wird
+      let schema = normalized.refine(
+        (val) => val === undefined || Array.isArray(val), // nur Arrays oder undefined
+        { message: "Ungültige Auswahl" }
+      ).transform((val) => (val === undefined ? undefined : (val as string[]))); // Cast 
+
+      // 4) Jetzt das innere Array-Schema auf das transformierte Ergebnis anwenden
+      //    Magiiiiic: z.union, um entweder undefined (bei !required) oder das geprüfte Array zu erlauben
+      schema = f.required 
+        ? z.union([schema as unknown as z.ZodType<string[]>, inner]) // required: transformiertes Array muss inner erfüllen
+        : z.union([z.undefined(), inner]).optional().superRefine((val, ctx) => { // optional: undefined erlaubt
+            if (val === undefined) return; // ok 
+            const parsed = inner.safeParse(val); 
+            if (!parsed.success) {
+              parsed.error.issues.forEach((issue) => ctx.addIssue(issue));
+            } 
+          });
+
+      return schema;
     }
     case "date": {
-      // yyyy-mm-dd (für MUI TextField type=date)
-      let s = z.string().regex(/^\d{4}-\d{2}-\d{2}$/, "Datum (YYYY-MM-DD)");
-      if (!f.required) s = s.optional();
-      return s;
+      // yyyy-mm-dd (für MUI TextField type=date), optional erlaubt undefined
+      const inner = z.string().regex(/^\d{4}-\d{2}-\d{2}$/, "Datum (YYYY-MM-DD)");
+      return f.required
+        ? z.preprocess(emptyToUndef, inner)
+        : z.preprocess(emptyToUndef, inner).optional();
     }
     case "file": {
       // Client-seitig nur minimal prüfen; Server validiert Größe/Typ

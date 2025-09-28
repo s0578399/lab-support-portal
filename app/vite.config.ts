@@ -10,5 +10,11 @@ export default defineConfig({
       // Erlaube Zugriff auf das Repo-Root (eine Ebene über app/)
       allow: [path.resolve(__dirname, '..')],
     },
+    proxy: {
+      '/api': {
+        target: 'http://localhost:3000', // Express-API
+        changeOrigin: true,
+      },
+    },
   },
 })
