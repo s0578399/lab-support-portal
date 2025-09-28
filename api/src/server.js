@@ -22,7 +22,13 @@ export function createServer() {
   app.use(helmet());
 
   // CORS: nur lokale Dev-URL erlaubt (später ggf. Uni-Domain hinzufügen)
-  app.use(cors({ origin: ['http://localhost:5173'] }));
+  app.use(cors({
+    origin: [
+      'http://localhost',
+      'http://localhost:5173',
+      'http://it-service-wi-test.f4.htw-berlin.de'
+    ]
+  }));
 
   // JSON-Parsing mit Payload-Limit (1MB)
   app.use(express.json({ limit: '1mb' }));
@@ -31,7 +37,8 @@ export function createServer() {
   app.use(rateLimit({ windowMs: 60_000, max: 60, standardHeaders: true, legacyHeaders: false }));
 
    // Health-Check-Endpoint für Monitoring/Load-Balancer
-  app.get('/health', (_req, res) => res.json({ ok: true }));
+  app.get('/health', (_req, res) => res.status(200).send('ok'));
+
 
   // Ticket-Erstellung
   app.post('/api/tickets', async (req, res) => {

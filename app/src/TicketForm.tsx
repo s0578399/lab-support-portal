@@ -10,7 +10,7 @@ import {
 // Logo aus public/ verwenden (Datei: /public/htw-logo.jpg)
 const logoSrc = "../../htw-logo.jpg";
 
-import formConfig from "../../config/form.schema.json";
+import formConfig from "../config/form.schema.json";
 import type { FormConfig, Category } from "./lib/formSchema";
 import { buildClientSchema } from "./lib/formSchema";
 import GroupedFields from "../components/GroupedFields";
