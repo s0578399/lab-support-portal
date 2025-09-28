@@ -22,6 +22,10 @@ export type Field = {
   step?: number;          // 1..n
   section?: string;       // z.B. "Kosten"
   col?: number;           // 1..12
+  /** Nur für Datei-Felder */           //NEU!!
+  accept?: string[] | string;           //NEU!!
+  maxSizeMB?: number;                   //NEU!!
+  multiple?: boolean;                   //NEU!!
 };
 
 // Layout-Defaults
@@ -48,6 +52,60 @@ const normalizeOptions = (opts?: Option[]) =>
 
 /** Leere Eingaben zu undefined normalisieren (für optionale Felder) */
 const emptyToUndef = (v: unknown) => (v === "" || v === null || v === undefined ? undefined : v);
+
+// Helper: alles auf einen einzelnen File normalisieren (oder undefined/null)
+const toSingleFile = (v: unknown) => {
+    if (v === "" || v === undefined) return undefined;
+    if (v === null) return null;
+    if (v instanceof File) return v;
+    // FileList (vom <input type="file">) oder Array<File>
+    const anyObj = v as any;
+    if (Array.isArray(anyObj) && anyObj[0] instanceof File) return anyObj[0];
+    if (anyObj && typeof anyObj === "object" && "length" in anyObj && anyObj[0] instanceof File) {
+      return anyObj[0];
+    }
+    return v;
+  };
+  
+  // Zod für Datei-Felder (single file), optional mit accept/maxSizeMB
+  function zodFileFor(field: Field) {
+    // Basis: nach Preprocess muss ein File da sein (oder leer bei optional)
+    let base = z.preprocess(
+      toSingleFile,
+      z.instanceof(File, { message: "Datei erwartet" })
+    );
+  
+    // optional/nullable abbilden
+    if (!field.required) {
+      base = base.optional().nullable();
+    }
+  
+    // Typ/Größe nur prüfen, wenn tatsächlich ein File vorhanden ist
+    if (field.maxSizeMB) {
+      const max = field.maxSizeMB;
+      base = base.refine(
+        (f) => !f || f.size <= max * 1024 * 1024,
+        { message: `Datei zu groß (max. ${max} MB)` }
+      );
+    }
+    if (field.accept) {
+      const accepts = Array.isArray(field.accept) ? field.accept : String(field.accept).split(",");
+      base = base.refine((f) => {
+        if (!f) return true;
+        return accepts.some((patRaw) => {
+          const pat = patRaw.trim();
+          if (!pat) return false;
+          if (pat.endsWith("/*")) {
+            const prefix = pat.slice(0, pat.indexOf("/"));
+            return f.type.startsWith(prefix + "/");
+          }
+          return f.type === pat;
+        });
+      }, { message: "Ungültiger Dateityp" });
+    }
+  
+    return base;
+  }
 
 /** Field -> Zod */
 function zodForField(f: Field): ZodTypeAny {
@@ -107,6 +165,8 @@ function zodForField(f: Field): ZodTypeAny {
         return z.preprocess(emptyToUndef, withEnum).optional();
       }
     }
+
+    // !!! Der ganze Multiselect-Teil ist glaub ich unnötig verkompliziert -> Nochmal prüfen später!!
     case "multiselect": {
       // 1) Eingabe normalisieren: '', undefined → undefined; 'a,b' → ['a','b']; Array bleibt Array
       const normalized = z.preprocess((v) => {
@@ -154,11 +214,7 @@ function zodForField(f: Field): ZodTypeAny {
         : z.preprocess(emptyToUndef, inner).optional();
     }
     case "file": {
-      // Client-seitig nur minimal prüfen; Server validiert Größe/Typ
-      const anyFile = z
-        .any()
-        .refine((fl) => !fl || (fl instanceof File || (fl?.[0] instanceof File)), "Datei erwartet");
-      return f.required ? anyFile : anyFile.optional();
+      return zodFileFor(f);
     }
     default:
       return z.any();

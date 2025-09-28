@@ -215,21 +215,38 @@ export default function JsonFormRenderer<T extends Record<string, any>>({ fields
         }
 
         // FILE (ein oder mehrere Dateien)
+        // innerhalb der Map über fields …
         if (f.type === "file") {
           return (
-            <Box key={f.name}>
-              <input
-                type="file"
-                {...register(f.name as any)}
-                onChange={(e) => {
-                  const fl = (e.target as HTMLInputElement).files;
-                  setValue(f.name as any, fl ?? undefined, { shouldValidate: true, shouldDirty: true });
-                }}
-                multiple
+            <Box key={f.name} sx={{ mb: 2 }}>
+              <Controller
+                name={f.name as any}
+                control={control}
+                render={({ field, fieldState }) => (
+                  <div>
+                    <input
+                      type="file"
+                      name={f.name}
+                      // aus dem Schema übernehmbar: Array oder String
+                      accept={
+                        Array.isArray((f as any).accept)
+                          ? (f as any).accept.join(",")
+                          : (f as any).accept
+                      }
+                      onChange={(e) => {
+                        const fl = e.target.files;
+                        const file = fl && fl.length > 0 ? fl[0] : null;                      
+                        field.onChange(file);        // <- WICHTIG: File in RHF-State schreiben
+                      }}
+                    />
+                    {fieldState.error && (
+                      <Box sx={{ color: "error.main", fontSize: 12, mt: 0.5 }}>
+                        {fieldState.error.message}
+                      </Box>
+                    )}
+                  </div>
+                )}
               />
-              {errOf(f.name) && (
-                <Box sx={{ color: "error.main", fontSize: 12, mt: 0.5 }}>{errOf(f.name)}</Box>
-              )}
             </Box>
           );
         }
