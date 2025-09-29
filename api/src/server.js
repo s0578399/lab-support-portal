@@ -21,17 +21,44 @@ export function createServer() {
   // Sicherheits-Header (Helmet)
   app.use(helmet());
 
-  // CORS: nur lokale Dev-URL erlaubt (später ggf. Uni-Domain hinzufügen)
-  app.use(cors({
-    origin: [
-      'http://localhost',
-      'http://localhost:5173',
-      'http://it-service-wi-test.f4.htw-berlin.de'
-    ]
-  }));
+
+  // --- CORS ---
+  const defaultAllowed = [
+    'http://localhost',
+    'http://localhost:80',
+    'http://localhost:3000',
+    'http://127.0.0.1',
+    'http://127.0.0.1:3000',
+    'http://it-service-wi-test.f4.htw-berlin.de',
+  ];
+
+  const envAllowed = (process.env.ALLOWED_ORIGINS || '')
+    .split(',')
+    .map(s => s.trim())
+    .filter(Boolean);
+
+  const allowedOrigins = Array.from(new Set([...defaultAllowed, ...envAllowed]));
+
+  // Dynamischer Origin-Check (empfohlen, statt "*")
+  const corsOptions = {
+    origin: function (origin, callback) {
+      // erlauben bei: no-origin (z.B. curl/Postman) oder in Liste
+      if (!origin || allowedOrigins.includes(origin)) {
+        return callback(null, true);
+      }
+      return callback(new Error(`CORS blocked for origin: ${origin}`), false);
+    },
+    methods: ['GET', 'POST', 'OPTIONS'],
+    allowedHeaders: ['Content-Type', 'X-Request-ID'],
+    credentials: false, // kein Cookie-Auth im MVP
+    optionsSuccessStatus: 204,
+  };
+
+  app.use(cors(corsOptions));
 
   // JSON-Parsing mit Payload-Limit (1MB)
-  app.use(express.json({ limit: '1mb' }));
+  // --- Body parsing ---
+  app.use(express.json({ limit: '100kb' }));
 
    // Rate-Limiting: max. 60 Requests pro Minute pro IP
   app.use(rateLimit({ windowMs: 60_000, max: 60, standardHeaders: true, legacyHeaders: false }));
