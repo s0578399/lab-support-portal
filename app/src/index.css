@@ -46,7 +46,7 @@ button {
   cursor: pointer;
   transition: border-color 0.25s;
 }
-/* z. B. in src/index.css */
+
 html, body, #root {
   height: 100%;
 }
@@ -78,4 +78,42 @@ html, body, #root {
   width: 100%;
   background-color: #ffffff !important;
 }
+
+/* src/index.css */
+@font-face {
+  font-family: 'HTWBerlinOffice';
+  src: url('/src/assets/fonts/HTWBerlinOffice-Regular.woff2') format('woff2'),
+       url('/src/assets/fonts/HTWBerlinOffice-Regular.ttf') format('truetype');
+  font-weight: 400;
+  font-style: normal;
+}
+
+@font-face {
+  font-family: 'HTWBerlinOffice';
+  src: url('/src/assets/fonts/HTWBerlinOffice-Bold.woff2') format('woff2');
+  font-weight: 700;
+  font-style: normal;
+}
+
+body {
+  font-family: 'HTWBerlinOffice', 'Roboto', 'Helvetica', 'Arial', sans-serif;
+  margin: 0;
+  background-color: #F6FBF9; /* seichtes Türkis/Mint */
+  font-family: "Roboto", "Helvetica", "Arial", sans-serif;
+}
+/* src/index.css */
+
+
+.MuiFormLabel-root {
+  font-weight: 500;
+}
+.MuiInputBase-input, .MuiSelect-select {
+  font-weight: 400;
+}
+.MuiButton-root {
+  font-weight: 600;
+  text-transform: none;
+}
+
+
 

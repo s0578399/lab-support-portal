@@ -1,0 +1,377 @@
+{
+  "categories": [
+    {
+      "key": "Procurement",
+      "label": "Beschaffung (Hard-/Software)",
+      "fields": [
+        { "name": "applicantTitle", "label": "Titel", "type": "text", "required": true,
+          "step": 1, "section": "Allgemein", "placeholder": "z.B. Bitte kurz beschreiben …",
+          "ui": { "layout": { "xs": 12, "sm": 12, "md": 4, "lg": 4 } }
+        },
+        { "name": "applicantRole", "label": "Rolle", "type": "text", "required": true,
+          "step": 1, "section": "Allgemein", "placeholder": "z.B. Bitte kurz beschreiben …",
+          "ui": { "layout": { "xs": 12, "sm": 12, "md": 4, "lg": 4 } }
+        },
+        { "name": "costCenter", "label": "Kostenstelle", "type": "text", "required": true,
+          "step": 1, "section": "Allgemein", "placeholder": "z.B. 12345-678",
+          "ui": { "layout": { "xs": 12, "sm": 12, "md": 4, "lg": 4 } }
+        },
+        { "name": "requestType", "label": "Art des Antrags", "type": "select", "required": true,
+          "options": [ { "value": "Hardware", "label": "Hardware" }, { "value": "Software", "label": "Software" } ],
+          "step": 1, "section": "Allgemein", "placeholder": "z.B. Hardware",
+          "ui": { "layout": { "xs": 12, "sm": 12, "md": 6, "lg": 6 } }
+        },
+        { "name": "description", "label": "Beschreibung", "type": "textarea", "required": true, "minLength": 20,
+          "step": 1, "section": "Beschreibung", "placeholder": "z.B. Bitte Lenovo ThinkPad T14 (16 GB / 512 GB) beschaffen …",
+          "ui": { "rows": 8, "layout": { "xs": 12, "sm": 12, "md": 12, "lg": 12 } }
+        },
+        { "name": "justification", "label": "Begründung / Bedarf", "type": "textarea", "required": true, "minLength": 1,
+          "step": 1, "section": "Beschreibung", "placeholder": "z.B. Gerät wird für neue Lehrveranstaltung im WiSe benötigt …",
+          "ui": { "rows": 6, "layout": { "xs": 12, "sm": 12, "md": 12, "lg": 12 } }
+        },
+        { "name": "quantity", "label": "Anzahl / Menge", "type": "number", "required": true, "min": 1, "integer": true,
+          "step": 1, "section": "Beschreibung", "placeholder": "z.B. 3",
+          "ui": { "layout": { "xs": 12, "sm": 12, "md": 4, "lg": 4 } }
+        },
+        { "name": "unit", "label": "Einheit", "type": "text", "required": true,
+          "step": 1, "section": "Beschreibung", "placeholder": "z.B. Stück",
+          "ui": { "layout": { "xs": 12, "sm": 12, "md": 4, "lg": 4 } }
+        },
+        { "name": "price", "label": "Preis / Kosten", "type": "text",
+          "step": 1, "section": "Beschreibung", "placeholder": "z.B. 1.150 € je Gerät",
+          "ui": { "layout": { "xs": 12, "sm": 12, "md": 4, "lg": 4 } }
+        },
+        { "name": "model", "label": "Gewünschtes Modell / Hersteller", "type": "text",
+          "step": 1, "section": "Beschreibung", "placeholder": "z.B. Lenovo ThinkPad T14 G4",
+          "ui": { "layout": { "xs": 12, "sm": 12, "md": 6, "lg": 6 } }
+        },
+        { "name": "productLink", "label": "Link zum Produkt", "type": "url", "required": false,
+          "step": 1, "section": "Beschreibung", "placeholder": "z.B. https://…",
+          "ui": { "layout": { "xs": 12, "sm": 12, "md": 6, "lg": 6 } }
+        },
+        { "name": "dueDate", "label": "Fälligkeits-Datum", "type": "date",
+          "step": 1, "section": "Ticket-Details", "placeholder": "z.B. 2025-09-30",
+          "ui": { "layout": { "xs": 12, "sm": 12, "md": 6, "lg": 6 } }
+        },
+        { "name": "vergabeFile", "label": "Vergabevermerk", "type": "file", "required": true,
+          "accept": ["application/pdf","image/*"], "maxSizeMB": 10,
+          "step": 1, "section": "Anhänge",
+          "ui": { "layout": { "xs": 12, "sm": 12, "md": 12, "lg": 12 } }
+        },
+        { "name": "belegFile", "label": "Buchungsbeleg", "type": "file", "required": true,
+          "accept": ["application/pdf","image/*"], "maxSizeMB": 10,
+          "step": 1, "section": "Anhänge",
+          "ui": { "layout": { "xs": 12, "sm": 12, "md": 12, "lg": 12 } }
+        }
+      ]
+    },
+    {
+      "key": "SoftwareInstall",
+      "label": "Software-Installation/Update",
+      "fields": [
+        { "name": "softwareName", "label": "Software: Name", "type": "text", "required": true,
+          "placeholder": "z.B. MATLAB Academic",
+          "ui": { "layout": { "xs": 12, "sm": 12, "md": 12, "lg": 6 } }
+        },
+        { "name": "softwareVersion", "label": "Version", "type": "text", "required": true,
+          "placeholder": "z.B. R2024b",
+          "ui": { "layout": { "xs": 12, "sm": 12, "md": 6, "lg": 6 } }
+        },
+        { "name": "isLicensed", "label": "Ist die Software lizenziert?", "type": "select",
+          "options": [ { "value": "yes", "label": "Ja" }, { "value": "no", "label": "Nein" } ],
+          "placeholder": "z.B. auswählen …",
+          "ui": { "layout": { "xs": 12, "sm": 12, "md": 6, "lg": 6 } }
+        },
+        { "name": "licenseRequired", "label": "Lizenz erforderlich?", "type": "select",
+          "options": [ { "value": "yes", "label": "ja" }, { "value": "no", "label": "nein" }, { "value": "please_check", "label": "bitte prüfen" } ],
+          "requiredIf": { "field": "isLicensed", "eq": "yes" }, "placeholder": "z.B. auswählen …",
+          "ui": { "layout": { "xs": 12, "sm": 12, "md": 6, "lg": 6 } }
+        },
+        { "name": "licenseInfo", "label": "Lizenzinformation / Schlüssel", "type": "textarea",
+          "ui": { "layout": { "xs": 12, "sm": 12, "md": 12, "lg": 12 } }
+        },
+        { "name": "installLocation", "label": "Ort der Installation", "type": "select", "required": true,
+          "options": [ { "value": "Lab", "label": "Laborraum" }, { "value": "VDI", "label": "VDI" } ],
+          "placeholder": "z.B. VDI",
+          "ui": { "rows": 4, "layout": { "xs": 12, "sm": 12, "md": 12, "lg": 12 } }
+        },
+        { "name": "labRooms", "label": "Labore (Mehrfachauswahl)", "type": "multiselect",
+          "options": [ "A209", "A210", "A214", "A236", "A142", "A143", "A013" ],
+          "requiredIf": { "field": "installLocation", "eq": "Lab" },
+          "showIf": { "field": "installLocation", "eq": "Lab" },
+          "ui": { "layout": { "xs": 12, "sm": 12, "md": 12, "lg": 12 } }
+        },
+        { "name": "vdiNote", "label": "Zusatzangabe für VDI", "type": "text",
+          "requiredIf": { "field": "installLocation", "eq": "VDI" },
+          "showIf": { "field": "installLocation", "eq": "VDI" },
+          "placeholder": "z.B. Pool A – Gruppe 1",
+          "ui": { "layout": { "xs": 12, "sm": 12, "md": 12, "lg": 12 } }
+        },
+        { "name": "deadline", "label": "Zeitpunkt / Frist", "type": "date", "required": true,
+          "help": "Hinweis: während des Semesters keine Beschaffung",
+          "placeholder": "z.B. 2025-10-15",
+          "ui": { "layout": { "xs": 12, "sm": 12, "md": 6, "lg": 6 } }
+        },
+        { "name": "reason", "label": "Grund für Installation/Update", "type": "textarea", "required": true,
+          "placeholder": "z.B. Funktionsupdate für Lehrveranstaltung WiSe …",
+          "ui": { "rows": 6, "layout": { "xs": 12, "sm": 12, "md": 12, "lg": 12 } }
+        }
+      ]
+    },
+    {
+      "key": "hardware-fault",
+      "label": "Störmeldung: Hardware-/Peripheriedefekte in Laboren",
+      "fields": [
+        { "name": "lab", "label": "Betroffenes Labor", "type": "select", "required": true,
+          "options": ["A209", "A210", "A214", "A236", "A142", "A143", "A013"], "placeholder": "z.B. auswählen …",
+          "ui": { "layout": { "xs": 12, "sm": 12, "md": 6, "lg": 6 } }
+        },
+        { "name": "deviceType", "label": "Gerätetyp", "type": "select", "required": true,
+          "options": ["Monitor", "PC", "Beamer", "Drucker", "Sonstiges"], "placeholder": "z.B. auswählen …",
+          "ui": { "layout": { "xs": 12, "sm": 12, "md": 6, "lg": 6 } }
+        },
+        { "name": "inventoryNumber", "label": "Gerätekennung / Inventarnummer", "type": "text", "required": true,
+          "placeholder": "z.B. HTW-INV-000123",
+          "ui": { "layout": { "xs": 12, "sm": 12, "md": 6, "lg": 6 } }
+        },
+        { "name": "inventoryPhoto", "label": "Foto der Inventarkennung", "type": "file", "required": false,
+          "ui": { "layout": { "xs": 12, "sm": 12, "md": 6, "lg": 6 } }
+        },
+        { "name": "errorDescription", "label": "Beschreibung des Fehlers", "type": "textarea", "required": true, "minLength": 10,
+          "placeholder": "z.B. Monitor flackert seit 10 Minuten, nur bei 60 Hz …",
+          "ui": { "rows": 8, "layout": { "xs": 12, "sm": 12, "md": 12, "lg": 12 } }
+        },
+        { "name": "priority", "label": "Priorisierung", "type": "select", "required": true,
+          "options": ["gering", "mittel", "hoch", "sehr hoch (Blocker)"], "placeholder": "z.B. auswählen …",
+          "ui": { "layout": { "xs": 12, "sm": 12, "md": 12, "lg": 12 } }
+        },
+        { "name": "reproSteps", "label": "Wie ist der Fehler reproduzierbar?", "type": "textarea", "required": true, "minLength": 10,
+          "placeholder": "z.B. Bei 60 Hz & Helligkeit > 80% tritt Flackern auf …",
+          "ui": { "rows": 6, "layout": { "xs": 12, "sm": 12, "md": 12, "lg": 12 } }
+        }
+      ]
+    },
+    {
+      "key": "software-fault",
+      "label": "Störmeldung: Softwarefehler (Labor/VDI)",
+      "fields": [
+        { "name": "softwareNameVersion", "label": "Software-Name und Version", "type": "text", "required": true,
+          "placeholder": "z.B. SPSS 29",
+          "ui": { "layout": { "xs": 12, "sm": 12, "md": 6, "lg": 6 } }
+        },
+        { "name": "errorDescription", "label": "Fehlerbeschreibung (Was genau ist passiert?)", "type": "textarea", "required": true, "minLength": 10,
+          "placeholder": "z.B. Anwendung stürzt beim Export als CSV ab …",
+          "ui": { "rows": 8, "layout": { "xs": 12, "sm": 12, "md": 12, "lg": 12 } }
+        },
+        { "name": "occurenceTime", "label": "Zeitpunkt des Auftretens", "type": "text", "required": false,
+          "placeholder": "z.B. 28.09.2025, 13:45 Uhr",
+          "ui": { "layout": { "xs": 12, "sm": 12, "md": 6, "lg": 6 } }
+        },
+        { "name": "place", "label": "Ort", "type": "select", "required": true,
+          "options": ["Laborraum", "Gerät", "VDI"], "placeholder": "z.B. auswählen …",
+          "ui": { "layout": { "xs": 12, "sm": 12, "md": 6, "lg": 6 } }
+        },
+        { "name": "screenshots", "label": "Screenshots (optional)", "type": "file", "required": false,
+          "accept": ["application/pdf", "image/*"], "maxSizeMB": 10,
+          "ui": { "layout": { "xs": 12, "sm": 12, "md": 12, "lg": 12 } }
+        },
+        { "name": "reproducible", "label": "Reproduzierbarkeit des Fehlers", "type": "select", "required": true,
+          "options": ["Ja", "Nein"], "placeholder": "z.B. auswählen …",
+          "ui": { "layout": { "xs": 12, "sm": 12, "md": 12, "lg": 12 } }
+        },
+        { "name": "reproSteps", "label": "Wenn ja: Wie ist der Fehler reproduzierbar?", "type": "textarea", "required": true, "minLength": 10,
+          "showIf": { "field": "reproducible", "eq": "Ja" }, "requiredIf": { "field": "reproducible", "eq": "Ja" },
+          "placeholder": "z.B. Datei öffnen → Menü Export → CSV wählen → Absturz",
+          "ui": { "rows": 6, "layout": { "xs": 12, "sm": 12, "md": 12, "lg": 12 } }
+        }
+      ]
+    },
+    {
+      "key": "vm-provision",
+      "label": "Antrag auf Bereitstellung von VMs",
+      "fields": [
+        { "name": "vmOs", "label": "Art des Betriebssystems der VM", "type": "select", "required": true,
+          "options": ["Linux", "Windows"], "placeholder": "z.B. auswählen …",
+          "ui": { "layout": { "xs": 12, "sm": 12, "md": 3, "lg": 3 } }
+        },
+        { "name": "purpose", "label": "Zweck der VM (z. B. Lehre, Projekt, Labor)", "type": "textarea", "required": true, "minLength": 10,
+          "placeholder": "z.B. Laborversuche für Modul X im WiSe …",
+          "ui": { "rows": 6, "layout": { "xs": 12, "sm": 12, "md": 12, "lg": 12 } }
+        },
+        { "name": "responsibles", "label": "Verantwortlichkeit", "type": "text", "required": true,
+          "placeholder": "Personen, durch Kommata getrennt",
+          "ui": { "layout": { "xs": 12, "sm": 12, "md": 12, "lg": 12 } }
+        },
+        { "name": "name", "label": "Bezeichnung", "type": "text", "required": true,
+          "placeholder": "z.B. VM-Webserver Labor F4",
+          "ui": { "layout": { "xs": 12, "sm": 12, "md": 6, "lg": 6 } }
+        },
+        { "name": "description", "label": "Beschreibung (Aufgaben, Dienste, Prod/Test)", "type": "textarea", "required": true, "minLength": 10,
+          "placeholder": "z.B. Apache + PHP, Testsystem für Webpraktikum …",
+          "ui": { "rows": 6, "layout": { "xs": 12, "sm": 12, "md": 6, "lg": 6 } }
+        },
+        { "name": "disk", "label": "Speicherbedarf Festplatte", "type": "text", "required": true,
+          "placeholder": "z.B. 512 GB SSD",
+          "ui": { "layout": { "xs": 12, "sm": 12, "md": 6, "lg": 6 } }
+        },
+        { "name": "ram", "label": "Speicherbedarf RAM", "type": "text", "required": true,
+          "placeholder": "z.B. 16 GB",
+          "ui": { "layout": { "xs": 12, "sm": 12, "md": 3, "lg": 3 } }
+        },
+        { "name": "cpuCores", "label": "Anzahl Prozessorkerne", "type": "number", "required": true, "min": 1, "integer": true,
+          "placeholder": "z.B. 4",
+          "ui": { "layout": { "xs": 12, "sm": 12, "md": 3, "lg": 3 } }
+        },
+        { "name": "isProject", "label": "Ist Zweck der VM ein Projekt?", "type": "select", "required": true,
+          "options": ["Ja", "Nein"], "placeholder": "z.B. auswählen …",
+          "ui": { "layout": { "xs": 12, "sm": 12, "md": 6, "lg": 6 } }
+        },
+        { "name": "projectEnd", "label": "Projektende", "type": "date", "required": true,
+          "showIf": { "field": "isProject", "eq": "Ja" }, "requiredIf": { "field": "isProject", "eq": "Ja" },
+          "placeholder": "z.B. 2026-03-31",
+          "ui": { "layout": { "xs": 12, "sm": 12, "md": 6, "lg": 6 } }
+        },
+        { "name": "reachability", "label": "Erreichbarkeit der VM", "type": "select", "required": true,
+          "options": ["Intern", "Extern"], "options": ["Intern", "Extern"],
+          "placeholder": "z.B. auswählen …",
+          "ui": { "layout": { "xs": 12, "sm": 12, "md": 6, "lg": 6 } }
+        }
+      ]
+    },
+    {
+      "key": "user-provision",
+      "label": "Antrag auf Bereitstellung von Usern",
+      "fields": [
+        { "name": "accountCount", "label": "Anzahl benötigter Accounts", "type": "number", "required": true, "min": 1, "integer": true,
+          "placeholder": "z.B. 3",
+          "ui": { "layout": { "xs": 12, "sm": 12, "md": 6, "lg": 6 } }
+        },
+        { "name": "userType", "label": "Art des Users/Systems", "type": "select", "required": true,
+          "options": ["Gast", "Klausur", "SAP", "VDI"], "options": ["Gast", "Klausur", "SAP", "VDI"],
+          "placeholder": "z.B. auswählen …",
+          "ui": { "layout": { "xs": 12, "sm": 12, "md": 6, "lg": 6 } }
+        },
+        { "name": "programDeptProf", "label": "Studiengang, Fachbereich, Professor", "type": "text", "required": true,
+          "placeholder": "z.B. WI, FB 4, Prof. Beispiel",
+          "ui": { "layout": { "xs": 12, "sm": 12, "md": 12, "lg": 12 } }
+        },
+        { "name": "validFrom", "label": "Gültig ab", "type": "date", "required": true,
+          "placeholder": "z.B. 2025-10-01",
+          "ui": { "layout": { "xs": 12, "sm": 12, "md": 6, "lg": 6 } }
+        },
+        { "name": "validTo", "label": "Gültig bis", "type": "date", "required": true,
+          "placeholder": "z.B. 2026-03-31",
+          "ui": { "layout": { "xs": 12, "sm": 12, "md": 6, "lg": 6 } }
+        },
+        { "name": "purpose", "label": "Verwendungszweck", "type": "textarea", "required": true, "minLength": 10,
+          "placeholder": "z.B. Zugang für Projektmodul X …",
+          "ui": { "rows": 6, "layout": { "xs": 12, "sm": 12, "md": 12, "lg": 12 } }
+        },
+        { "name": "systemsAccess", "label": "Zugang zu bestimmten Systemen notwendig? (z. B. SAP, Moodle)", "type": "text", "required": false,
+          "placeholder": "z.B. SAP, Moodle",
+          "ui": { "layout": { "xs": 12, "sm": 12, "md": 12, "lg": 12 } }
+        },
+        { "name": "autoDelete", "label": "Sollen die Accounts automatisch gelöscht werden?", "type": "select", "required": true,
+          "options": ["Ja", "Nein"], "options": ["Ja", "Nein"],
+          "placeholder": "z.B. auswählen …",
+          "ui": { "layout": { "xs": 12, "sm": 12, "md": 6, "lg": 6 } }
+        },
+        { "name": "contactPerson", "label": "Ansprechpartner für Rückfragen", "type": "text", "required": true,
+          "placeholder": "z.B. Max Mustermann",
+          "ui": { "layout": { "xs": 12, "sm": 12, "md": 6, "lg": 6 } }
+        }
+      ]
+    },
+    {
+      "key": "exam-support",
+      "label": "Antrag auf Unterstützung bei Klausuren",
+      "fields": [
+        { "name": "examDate", "label": "Datum der Klausur", "type": "date", "required": true,
+          "placeholder": "z.B. 2025-12-12",
+          "ui": { "layout": { "xs": 12, "sm": 12, "md": 6, "lg": 6 } }
+        },
+        { "name": "examTime", "label": "Uhrzeit (8:00–16:00, 15-minütig)", "type": "select", "required": true,
+          "options": ["08:00","08:15","08:30","08:45","09:00","09:15","09:30","09:45","10:00","10:15","10:30","10:45","11:00","11:15","11:30","11:45","12:00","12:15","12:30","12:45","13:00","13:15","13:30","13:45","14:00","14:15","14:30","14:45","15:00","15:15","15:30","15:45","16:00"],
+          "placeholder": "z.B. auswählen …",
+          "ui": { "layout": { "xs": 12, "sm": 12, "md": 6, "lg": 6 } }
+        },
+        { "name": "labs", "label": "Betroffenes Labor(e)", "type": "multiselect", "required": true,
+          "options": ["TA A 209","A210","A214","A236","A142","A143","A013","A116","A216","A216b"],
+          "ui": { "layout": { "xs": 12, "sm": 12, "md": 12, "lg": 12 } }
+        },
+        { "name": "participants", "label": "Anzahl der Teilnehmenden", "type": "number", "required": true, "min": 1, "integer": true,
+          "placeholder": "z.B. 24",
+          "ui": { "layout": { "xs": 12, "sm": 12, "md": 6, "lg": 6 } }
+        },
+        { "name": "supportNeeded", "label": "Benötigte Unterstützung", "type": "select", "required": true,
+          "options": ["Aufsicht","technische Einrichtung","VDI-Login","sonstige"], "placeholder": "z.B. auswählen …",
+          "ui": { "layout": { "xs": 12, "sm": 12, "md": 6, "lg": 6 } }
+        },
+        { "name": "techRequirements", "label": "Technische Anforderungen (z. B. Software, Netzwerkzugang)", "type": "textarea", "required": true, "minLength": 10,
+          "placeholder": "z.B. SPSS installiert, Internetzugang gesperrt …",
+          "ui": { "rows": 6, "layout": { "xs": 12, "sm": 12, "md": 12, "lg": 12 } }
+        },
+        { "name": "duration", "label": "Dauer der Unterstützung", "type": "text", "required": true,
+          "placeholder": "z.B. 90 Minuten",
+          "ui": { "layout": { "xs": 12, "sm": 12, "md": 6, "lg": 6 } }
+        },
+        { "name": "onSiteContact", "label": "Ansprechpartner während der Klausur", "type": "text", "required": true,
+          "placeholder": "z.B. Dr. Muster",
+          "ui": { "layout": { "xs": 12, "sm": 12, "md": 6, "lg": 6 } }
+        }
+      ]
+    },
+    {
+      "key": "refund",
+      "label": "Antrag auf Rückerstattung",
+      "fields": [
+        { "name": "applicantName", "label": "Antragsteller: Name", "type": "text", "required": true, "placeholder": "z.B. Bitte kurz beschreiben …" },
+        { "name": "applicantTitle", "label": "Antragsteller: Titel", "type": "text", "required": true, "placeholder": "z.B. Bitte kurz beschreiben …" },
+        { "name": "applicantRole", "label": "Antragsteller: Rolle", "type": "text", "required": true, "placeholder": "z.B. Bitte kurz beschreiben …" },
+
+        { "name": "costCenter", "label": "Kostenstelle", "type": "text", "required": true, "placeholder": "z.B. Bitte kurz beschreiben …" },
+
+        { "name": "purchaseDescription", "label": "Beschreibung der getätigten Beschaffung", "type": "textarea", "required": true, "minLength": 10,
+      "placeholder": "z.B. Bitte kurz beschreiben …" },
+        { "name": "justification", "label": "Begründung / Bedarf", "type": "textarea", "required": true, "minLength": 10, 
+      "placeholder": "z.B. Bitte kurz beschreiben …" },
+
+        { "name": "quantity", "label": "Anzahl / Menge", "type": "number", "required": true, "min": 1, "integer": true, 
+      "placeholder": "z.B. Bitte kurz beschreiben …" },
+        { "name": "unit", "label": "Einheit", "type": "text", "required": true, 
+      "placeholder": "z.B. Bitte kurz beschreiben …" },
+
+        { "name": "manufacturer", "label": "Hersteller", "type": "text", "required": false, 
+      "placeholder": "z.B. Bitte kurz beschreiben …" },
+
+        { "name": "amount", "label": "Betrag", "type": "number", "required": true, "min": 0, 
+      "placeholder": "z.B. Bitte kurz beschreiben …" },
+
+        { "name": "awardNote", "label": "Vergabevermerk", "type": "file", "required": true, 
+      "accept": ["application/pdf","image/*"], "maxSizeMB": 10,
+          "step": 1, "section": "Anhänge" },
+        { "name": "bookingReceipt", "label": "Buchungsbeleg", "type": "file", "required": true, 
+      "accept": ["application/pdf","image/*"], "maxSizeMB": 10,
+          "step": 1, "section": "Anhänge" }
+      ]
+    }
+  ],
+  "baseFields": [
+    { "name": "name", "label": "Name", "type": "text", "required": true, "minLength": 2,
+      "ui": { "layout": { "xs": 12, "sm": 12, "md": 6, "lg": 6 } }
+    },
+    { "name": "email", "label": "E-Mail", "type": "email", "required": true,
+      "ui": { "layout": { "xs": 12, "sm": 12, "md": 6, "lg": 6 } }
+    },
+    { "name": "subject", "label": "Betreff", "type": "text", "required": true, "minLength": 3,
+      "ui": { "layout": { "xs": 12, "sm": 12, "md": 6, "lg": 6 } }
+    },
+
+    { "name": "priority", "label": "Priorität", "type": "select",
+      "options": ["low", "medium", "high"],
+      "required": true,
+      "step": 1, "section": "Ticket-Details",
+      "ui": { "layout": { "xs": 12, "sm": 12, "md": 3, "lg": 3 } }
+    }
+  ]
+}

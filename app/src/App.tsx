@@ -7,6 +7,11 @@ import {
 import { createTheme } from '@mui/material/styles';
 import TicketForm from './TicketForm';
 import { theme as baseTheme } from './theme';
+import Stepper from '@mui/material/Stepper';       
+import Step from '@mui/material/Step';             
+import StepLabel from '@mui/material/StepLabel';   
+import NumberStepIcon from '../components/NumberStepIcon'; 
+import StepConnectorGreen from '../components/StepConnectorGreen'; 
 
 export default function App() {
   const theme = useMemo(() => createTheme(baseTheme), []);
@@ -23,11 +28,13 @@ export default function App() {
       {/* Zentrierter Seiten-Wrapper */}
       <Box
         sx={{
+        minHeight: '100dvh',
         flex: 1,                      // nimmt den ganzen verbleibenden Platz
         display: "flex",
         justifyContent: "center",     // horizontal zentriert
-        alignItems: "center",         // vertikal zentriert
-        p: { xs: 2, sm: 3 },
+        alignItems: "flex-start",         // vertikal zentriert
+        bgcolor: '#F6FBF9',
+        pv: { xs: 2, sm: 6 },
         }}
       >
         {/* TicketForm rendert seine eigene Paper-Karte mit maxWidth ~960 */}
