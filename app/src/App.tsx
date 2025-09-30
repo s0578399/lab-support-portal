@@ -18,11 +18,7 @@ export default function App() {
     <ThemeProvider theme={theme}>
       <CssBaseline />
 
-      <AppBar position="static">
-        <Toolbar>
-          <Typography variant="h6">Prototyp für Formularlogik</Typography>
-        </Toolbar>
-      </AppBar>
+      
 
       {/* Zentrierter Seiten-Wrapper */}
       <Box

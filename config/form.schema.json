@@ -4,8 +4,6 @@
       "key": "Procurement",
       "label": "Beschaffung (Hard-/Software)",
       "fields": [
-        { "name": "applicantName",  "label": "Antragsteller (Name)", "type": "text",   "required": true, "minLength": 1,
-         "step": 1, "section": "Allgemein", "col": 8 },
         { "name": "applicantTitle", "label": "Titel",                "type": "text",   "required": true, 
          "step": 1, "section": "Allgemein", "col": 6 },
         { "name": "applicantRole",  "label": "Rolle",                "type": "text",   "required": true, 

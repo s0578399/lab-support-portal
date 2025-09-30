@@ -11,6 +11,15 @@ type Props<T extends Record<string, any>> = {
   step: number;
 };
 
+function widthToCols(width?: "full" | "half" | "third"): 12 | 6 | 4 {
+  switch (width) {
+    case "full":  return 12;
+    case "third": return 4;
+    case "half":
+    default:      return 6;
+  }
+}
+
 export default function GroupedFields<T extends Record<string, any>>({ fields, form, step }: Props<T>) {
   // Filter auf Step und nach Section gruppieren
   const bySection = React.useMemo(() => {

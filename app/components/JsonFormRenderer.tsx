@@ -10,6 +10,33 @@ type Props<T extends Record<string, any>> = {
   form: UseFormReturn<T>;
 };
 
+// Einheitliches „eingrauen“ für alle Felder (Outlined-Variante) 
+const fieldSx = { 
+  "& .MuiOutlinedInput-root": { 
+    backgroundColor: (theme: any) => theme.palette.grey[50],  // hellgrau 
+    borderRadius: 0.7,
+    "& fieldset": { borderColor: "#E5E7EB" },                 // border default /
+    "&:hover fieldset": { borderColor: "#D1D5DB" },           // hover
+    "&.Mui-focused fieldset": { borderColor: "#9CA3AF" },     // focus
+  }, 
+  "& .MuiInputBase-input::placeholder": { 
+    color: "text.disabled", 
+    opacity: 1, 
+  }, 
+  "& .MuiInputLabel-root": {            
+    color: "#000000",                  
+    fontSize: "0.95rem",                 
+    fontWeight: 500                      
+  },
+  "& .MuiInputLabel-root.Mui-focused": { 
+    color: "#000000"                     
+  }, 
+  "& .MuiInputLabel-root.MuiInputLabel-shrink": { 
+    transform: "translate(8px, -22px) scale(0.9)" 
+  }
+
+};
+
 export default function JsonFormRenderer<T extends Record<string, any>>({ fields, form }: Props<T>) {
   const { control, register, unregister, setValue, formState: { errors } } = form;
   const values = useWatch({ control });
@@ -40,13 +67,16 @@ export default function JsonFormRenderer<T extends Record<string, any>>({ fields
                 <TextField
                   {...field}
                   fullWidth
+                  sx={fieldSx}
                   label={f.label + (f.required ? " *" : "")}
                   value={field.value ?? ""}
                   onChange={(e) => field.onChange(e.target.value ?? "")}
                   error={!!fieldState.error}
                   helperText={fieldState.error?.message}
                   multiline={f.type === "textarea"}
-                  minRows={f.type === "textarea" ? 4 : undefined}
+                  minRows={f.type === "textarea" ? (f.ui?.rows ?? 4) : undefined}  
+                  placeholder={f.placeholder}                                       
+                  InputLabelProps={{ shrink: true }}                               
                 />
               )}
             />
@@ -64,6 +94,7 @@ export default function JsonFormRenderer<T extends Record<string, any>>({ fields
                 <TextField
                   {...field}
                   fullWidth
+                  sx={fieldSx}
                   label={f.label + (f.required ? " *" : "")}
                   value={field.value ?? ""}
                   onChange={(e) => field.onChange(e.target.value ?? "")}
@@ -71,6 +102,8 @@ export default function JsonFormRenderer<T extends Record<string, any>>({ fields
                   helperText={fieldState.error?.message}
                   type="email"
                   inputMode="email"
+                  placeholder={f.placeholder}
+                  InputLabelProps={{ shrink: true }}
                 />
               )}
             />
@@ -88,6 +121,7 @@ export default function JsonFormRenderer<T extends Record<string, any>>({ fields
                 <TextField
                   {...field}
                   fullWidth
+                  sx={fieldSx}
                   label={f.label + (f.required ? " *" : "")}
                   value={field.value ?? ""}
                   onChange={(e) => field.onChange(e.target.value ?? "")}
@@ -95,6 +129,8 @@ export default function JsonFormRenderer<T extends Record<string, any>>({ fields
                   helperText={fieldState.error?.message}
                   type="url"
                   inputMode="url"
+                  placeholder={f.placeholder}                                       
+                  InputLabelProps={{ shrink: true }}
                 />
               )}
             />
@@ -112,12 +148,21 @@ export default function JsonFormRenderer<T extends Record<string, any>>({ fields
                 <TextField
                   {...field}
                   fullWidth
+                  sx={fieldSx}
                   label={f.label + (f.required ? " *" : "")}
                   value={field.value ?? ""}
-                  onChange={(e) => field.onChange(e.target.value ?? "")}
+                  // im number-Zweig:
+                  onChange={(e) => {
+                    const v = e.target.value;
+                    field.onChange(v === "" ? "" : Number(v));
+                  }}
+
                   error={!!fieldState.error}
                   helperText={fieldState.error?.message}
+                  type="number"
                   inputMode="decimal"
+                  placeholder={f.placeholder}                                       
+                  InputLabelProps={{ shrink: true }}
                 />
               )}
             />
@@ -137,13 +182,24 @@ export default function JsonFormRenderer<T extends Record<string, any>>({ fields
                   {...field}
                   select
                   fullWidth
+                  sx={fieldSx}
                   label={f.label + (f.required ? " *" : "")}
                   value={field.value ?? ""}
                   onChange={(e) => field.onChange(e.target.value ?? "")}
                   error={!!fieldState.error}
                   helperText={fieldState.error?.message}
+                  SelectProps={{
+                    displayEmpty: true,                                            
+                    renderValue: (v: any) =>
+                      v
+                        ? (opts.find(o => o.value === v)?.label ?? v)
+                        : (f.placeholder ?? "Bitte auswählen …"),                
+                  }}
+                  InputLabelProps={{ shrink: true }}
                 >
-                  {!f.required && <MenuItem value="">{/* leer erlaubt */}</MenuItem>}
+                  <MenuItem value="" disabled={!!f.required}>                       
+                    <em>{f.placeholder ?? "Bitte auswählen …"}</em>
+                  </MenuItem>
                   {opts.map((o) => (
                     <MenuItem key={o.value} value={o.value}>
                       {o.label}
@@ -167,8 +223,29 @@ export default function JsonFormRenderer<T extends Record<string, any>>({ fields
                 <TextField
                   {...field}
                   select
-                  SelectProps={{ multiple: true }}
+                  SelectProps={{ multiple: true,
+                    MenuProps: {                                   // Menü stylen (Popper/Paper)
+                    PaperProps: {
+                      sx: {
+                        borderRadius: 0,
+                        border: "1px solid #E5E7EB",
+                        boxShadow: "none",
+                        "& .MuiMenuItem-root": { fontSize: "0.95rem" }
+                      }
+                    }
+                  },
+                  renderValue: (selected: any) => {              // Placeholder grau anzeigen
+                    const arr = Array.isArray(selected) ? selected : [];
+                    if (!arr.length) {
+                      return <span style={{ color: "rgba(0,0,0,0.38)" }}>
+                        {f.placeholder ?? "Bitte auswählen …"}
+                      </span>;
+                    }
+                    return arr.join(", ");
+                  }
+                  }}
                   fullWidth
+                  sx={fieldSx}
                   label={f.label + (f.required ? " *" : "")}
                   value={Array.isArray(field.value) ? field.value : (field.value ? String(field.value).split(",") : [])}
                   onChange={(e) => {
@@ -178,6 +255,8 @@ export default function JsonFormRenderer<T extends Record<string, any>>({ fields
                   }}
                   error={!!fieldState.error}
                   helperText={fieldState.error?.message}
+                  InputLabelProps={{ shrink: true }}                               
+                  placeholder={f.placeholder}
                 >
                   {opts.map((o) => (
                     <MenuItem key={o.value} value={o.value}>
@@ -201,6 +280,7 @@ export default function JsonFormRenderer<T extends Record<string, any>>({ fields
                 <TextField
                   {...field}
                   fullWidth
+                  sx={fieldSx}
                   type="date"
                   label={f.label + (f.required ? " *" : "")}
                   value={field.value ?? ""}
@@ -208,6 +288,7 @@ export default function JsonFormRenderer<T extends Record<string, any>>({ fields
                   error={!!fieldState.error}
                   helperText={fieldState.error?.message}
                   InputLabelProps={{ shrink: true }}
+                  placeholder={f.placeholder}
                 />
               )}
             />
