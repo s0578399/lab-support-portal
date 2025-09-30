@@ -5,7 +5,7 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm, FormProvider } from "react-hook-form";
 import {
   Box, Container, Paper, Stack, Typography, Avatar,
-  Stepper, Step, StepLabel, Button, Snackbar, Alert, TextField, MenuItem, Grid
+  Stepper, Step, StepLabel, Button, Snackbar, Alert, TextField, MenuItem, Grid, List, ListItem, ListItemText
 } from "@mui/material";
 import StepConnector, { stepConnectorClasses } from "@mui/material/StepConnector";
 import { styled } from "@mui/material/styles";
@@ -19,7 +19,7 @@ import GroupedFields from "../components/GroupedFields";
 
 type FormShape = Record<string, any>;
 
-// Eigene Step-Icon Komponente (weiß/grün aktiv, grau inaktiv)
+// Eigene Step-Icon Komponente (wird aktuell nicht genutzt)
 function NumberStepIcon(props: any) { 
   const { active, completed, icon, className } = props; 
   const isOn = !!active || !!completed; 
@@ -75,7 +75,7 @@ export default function TicketForm() {
   function makeDefaultByType(t: string) {
     switch (t) {
       case "number":
-        return ""; // Zahlen beginnen ab leeren String beginnen (MUI-kompatibel)
+        return ""; // MUI-kompatibel
       case "multiselect":
         return []; 
       case "file":
@@ -100,18 +100,18 @@ export default function TicketForm() {
   // ================================================================
 
   const form = useForm<FormShape>({
-  resolver: zodResolver(ClientSchema),
-  defaultValues: buildInitialDefaults(),
-  mode: "onSubmit",
+    resolver: zodResolver(ClientSchema),
+    defaultValues: buildInitialDefaults(),
+    mode: "onSubmit",
   });
 
-// außerhalb der useForm-Konfiguration
-const selectedCategory = form.watch("category");
+  // außerhalb der useForm-Konfiguration
+  const selectedCategory = form.watch("category");
 
-  const { handleSubmit, watch, reset, getValues } = form; 
+  const { watch, reset, getValues, register, trigger } = form; //NEU!
   const currentKey = watch("category") || defaultCat;
   const currentCat: Category | undefined = categories.find((c) => c.key === currentKey);
-
+  
   // Beim Kategorienwechsel die neu sichtbaren Felder mit sinnvollen Defaults belegen
   useEffect(() => { 
     const values = getValues();
@@ -120,30 +120,88 @@ const selectedCategory = form.watch("category");
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [currentKey]); 
 
-  // Alle Felder: Base + aktuelle Kategorie
-  const allFields = useMemo(() => {
-    const base = cfg.baseFields ?? [];
-    const cat = currentCat?.fields ?? [];
-    return [...base, ...cat];
-  }, [cfg.baseFields, currentCat]);
+  // --- Feldgruppen vorbereiten -----------------------------------
+  const baseFields = useMemo(() => cfg.baseFields ?? [], [cfg.baseFields]);
 
-  // Senden → will hier nur was ausporbieren, später löschen
-  async function onSubmit(values: FormShape) {
+  // NEU! Kontaktfeld-Namen automatisch erkennen (aus baseFields)
+  const CONTACT_KEYS = useMemo(() => { //NEU!
+    const keys = new Set<string>();
+    (cfg.baseFields ?? []).forEach((f) => {
+      const n = String(f?.name ?? "");
+      const l = n.toLowerCase();
+      if (["name", "fullname", "vorname", "nachname", "requestername"].includes(l)) keys.add(n);
+      if (["email", "e-mail", "mail", "requesteremail"].includes(l) || f.type === "email") keys.add(n);
+    });
+    if (keys.size === 0) { keys.add("name"); keys.add("email"); } // Fallback
+    return keys;
+  }, [cfg.baseFields]); //NEU!
+
+  const contactNameKey = useMemo( //NEU!
+    () => [...CONTACT_KEYS].find((k) => /name/i.test(k)) ?? "name",
+    [CONTACT_KEYS]
+  );
+  const contactEmailKey = useMemo( //NEU!
+    () => [...CONTACT_KEYS].find((k) => /(email|mail)/i.test(k)) ?? "email",
+    [CONTACT_KEYS]
+  );
+
+  const baseNoContact = useMemo( //NEU!
+    () => (cfg.baseFields ?? []).filter((f) => !CONTACT_KEYS.has(f.name)),
+    [cfg.baseFields, CONTACT_KEYS]
+  );
+
+  const categoryFields = useMemo(() => currentCat?.fields ?? [], [currentCat]);
+  const step1Fields = useMemo( //NEU!
+    () => [...baseNoContact, ...categoryFields],
+    [baseNoContact, categoryFields]
+  );
+
+  // Pflichtfelder für Step 1: Base (ohne Kontakt) + Kategorie
+  const step1FieldNames = useMemo(() => { //NEU!
+    const reqBase = baseNoContact.filter((f: any) => f.required === true).map((f: any) => f.name);
+    const reqCat  = categoryFields.filter((f: any) => f.required === true).map((f: any) => f.name);
+    return ["category", ...reqBase, ...reqCat];
+  }, [baseNoContact, categoryFields]); 
+
+  // Step 1 → nur diese Felder validieren, dann weiter
+  async function nextFromStep1() { //NEU!
+    const ok = await trigger(step1FieldNames as any);
+    if (!ok) {
+      setSnack({ open: true, msg: "Bitte Pflichtfelder in Schritt 1 prüfen.", sev: "error" });
+      return;
+    }
     setSnack({ open: true, msg: "Validierung OK – weiter zu Kontaktdaten", sev: "success" });
     setActive(1);
+  }
+
+  // Name/E-Mail (hart, aber RHF-registriert)
+  const [contactTouched, setContactTouched] = useState({ name: false, email: false });
+  const valuesAll = watch(); // re-render bei Feldänderungen
+  const nameVal  = String(valuesAll?.[contactNameKey] ?? ""); //NEU!
+  const emailVal = String(valuesAll?.[contactEmailKey] ?? ""); //NEU!
+  const emailInvalid = emailVal.trim().length > 0 && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(emailVal); //NEU!
+
+  function nextFromStep2() { //NEU!
+    const nameOk = !!nameVal.trim();
+    const emailOk = !!emailVal.trim() && !emailInvalid;
+    setContactTouched({ name: true, email: true });
+    if (!nameOk || !emailOk) {
+      setSnack({ open: true, msg: "Bitte Name und gültige E-Mail eingeben.", sev: "error" });
+      return;
+    }
+    setActive(2);
   }
 
   // Konstante für API-Basis
   const API_BASE = import.meta.env.VITE_API_BASE || "/api";
 
-  // Hilfen: Dateifeldnamen aus der gewählten Kategorie bestimmen
+  // Dateifeldnamen aus der gewählten Kategorie bestimmen
   function fileFieldNamesForCategory(catKey: string): string[] {
     const cat = (formConfig as any).categories?.find((c: any) => c.key === catKey);
     if (!cat) return [];
     return (cat.fields || []).filter((f: any) => f.type === "file").map((f: any) => f.name);
   }
 
-  // Prüfen, ob im Values-Objekt Dateien enthalten sind (File oder FileList)
   function hasAnyFiles(values: Record<string, any>, fileFieldNames: string[]) {
     return fileFieldNames.some((name) => {
       const v = values?.[name];
@@ -155,7 +213,6 @@ const selectedCategory = form.watch("category");
     });
   }
 
-  // FormData aus den Values bauen (Textfelder + Dateien)
   function buildFormData(values: Record<string, any>, fileFieldNames: string[]) {
     const fd = new FormData();
 
@@ -186,55 +243,104 @@ const selectedCategory = form.watch("category");
     return fd;
   }
 
+  // Nur die Keys senden, die das Backend erwartet (inkl. dynamischer Kontakt-Keys)
+  function allowedKeysForCurrent() { //NEU!
+    const base = (cfg.baseFields ?? []).map((f) => f.name);
+    const cat  = (currentCat?.fields ?? []).map((f) => f.name);
+    return new Set<string>(["category", ...base, ...cat, ...Array.from(CONTACT_KEYS)]);
+  }
+
+  // Feld-Def nach Name finden (aus Base + aktueller Kategorie)
+  function getFieldDef(name: string) {
+    const base = (cfg.baseFields ?? []).find((f) => f.name === name);
+    if (base) return base;
+    const cat = (currentCat?.fields ?? []).find((f) => f.name === name);
+    return cat;
+  }
+
+  // Einzelwert normalisieren ("" → undefined, Zahlen parsen)
+  function normalizeValue(key: string, val: any) { //NEU!
+    const def = getFieldDef(key);
+    const t = def?.type; // "text" | "number" | "multiselect" | "file" | "email" | ...
+    if (val == null) return undefined;
+
+    if (t === "number") {
+      if (val === "" || Number.isNaN(Number(val))) return undefined;
+      return typeof val === "number" ? val : Number(val);
+    }
+
+    if (Array.isArray(val)) {
+      return val.length ? val : [];
+    }
+
+    if (typeof val === "string") {
+      const s = val.trim();
+      return s === "" ? undefined : s;
+    }
+
+    return val;
+  }
+
+  // Payload zusammenbauen (filtern + normalisieren)
+  function buildPayload(values: Record<string, any>) { //NEU!
+    const allow = allowedKeysForCurrent();
+    const out: Record<string, any> = {};
+    for (const [k, v] of Object.entries(values)) {
+      if (!allow.has(k)) continue;
+      const norm = normalizeValue(k, v);
+      if (norm !== undefined) out[k] = norm; // undefined-Keys gar nicht senden
+    }
+    return out;
+  }
+
   async function submitFinal(values: any) {
-    // 1) Dateifelder der aktiven Kategorie ermitteln
-    const catKey = values?.category ?? "";
+    const payload = buildPayload(values); // gefiltert + normalisiert
+
+    const catKey = payload?.category ?? "";
     const fileFields = fileFieldNamesForCategory(catKey);
 
-    // 2) Entscheiden, ob multipart nötig ist:
-    const useMultipart = hasAnyFiles(values, fileFields) || fileFields.length > 0;
+    // Nur multipart, wenn wirklich Dateien vorhanden sind
+    const useMultipart = hasAnyFiles(values, fileFields);
 
     try {
       let res: Response;
-
       if (useMultipart) {
-        const fd = buildFormData(values, fileFields);
-        res = await fetch(`${API_BASE}/tickets`, {
-          method: "POST",
-          body: fd, // KEINE headers/content-type hier setzen!
-        });
+        const fd = buildFormData(payload, fileFields);
+        res = await fetch(`${API_BASE}/tickets`, { method: "POST", body: fd });
       } else {
         res = await fetch(`${API_BASE}/tickets`, {
           method: "POST",
           headers: { "Content-Type": "application/json" },
-          body: JSON.stringify(values),
+          body: JSON.stringify(payload),
         });
       }
 
       if (res.ok) {
         setSnack({ open: true, msg: "Ticket erfolgreich versendet ✅", sev: "success" });
-        form.reset(buildInitialDefaults()); //NEU! sauber zurücksetzen
+        form.reset(buildInitialDefaults());
+        setContactTouched({ name: false, email: false });
         setActive(0);
         return;
       }
 
-      // Fehlerbehandlung differenziert
-      let payload: any = null;
-      try { payload = await res.json(); } catch {}
+      // Response lesen (JSON → Text-Fallback)
+      let payloadJson: any = null, textFallback = "";
+      try { payloadJson = await res.json(); } catch { try { textFallback = await res.text(); } catch {} }
 
       switch (res.status) {
         case 400: {
-          const fieldErrors = payload?.details?.fieldErrors || {};
-          const formErrors = payload?.details?.formErrors || [];
+          const fieldErrors = payloadJson?.details?.fieldErrors || {};
+          const formErrors = payloadJson?.details?.formErrors || [];
           Object.entries(fieldErrors).forEach(([name, msgs]: any) => {
             const msg = Array.isArray(msgs) ? msgs[0] : String(msgs);
             form.setError(name as any, { type: "server", message: msg || "Ungültige Eingabe" });
           });
-          if (formErrors.length) {
-            setSnack({ open: true, msg: formErrors[0] || "Eingaben unvollständig/ungültig.", sev: "error" });
-          } else {
-            setSnack({ open: true, msg: "Eingaben unvollständig/ungültig.", sev: "error" });
-          }
+          const firstMsg =
+            (Array.isArray(formErrors) && formErrors[0]) ||
+            payloadJson?.message ||
+            textFallback ||
+            "Eingaben unvollständig/ungültig.";
+          setSnack({ open: true, msg: firstMsg, sev: "error" });
           break;
         }
         case 502:
@@ -243,31 +349,57 @@ const selectedCategory = form.watch("category");
         case 500:
           setSnack({ open: true, msg: "Serverfehler (500).", sev: "error" });
           break;
-        default:
-          setSnack({ open: true, msg: `Fehler: HTTP ${res.status}`, sev: "error" });
+        default: {
+          const msg = payloadJson?.message || textFallback || `Fehler: HTTP ${res.status}`;
+          setSnack({ open: true, msg, sev: "error" });
+          break;
+        }
       }
     } catch (err) {
+      console.error("Submit error:", err);
       setSnack({ open: true, msg: "Netzwerkfehler beim Senden.", sev: "error" });
     }
   }
 
   return (
     <Box sx={{ py: 6, bgcolor: "background.default" }}>
-      {/* Außenrahmen: volle Breite erlauben, innen zentrieren */}
       <Container maxWidth={false} sx={{ px: { xs: 2, sm: 3 } }}>
         <Box sx={{ display: "flex", justifyContent: "center" }}>
           <Paper
             elevation={3}
             sx={{
               width: "100%",
-              maxWidth: 960,           // Zielbreite der Karte
+              maxWidth: 960,
               p: { xs: 2, md: 4 },
               mx: "auto",
               borderRadius: 3,
             }}
           >
             <Stack direction="row" spacing={2} alignItems="center">
-              <Avatar src={logoSrc} variant="rounded" sx={{ width: 56, height: 56 }} />
+              <Box
+                sx={{
+                  width: 112,
+                  height: 64,
+                  borderRadius: 2,
+                  overflow: "hidden",
+                  flexShrink: 0,
+                }}
+              >
+                <img
+                  src={logoSrc}
+                  alt="HTW Logo"
+                  draggable={false}
+                  style={{
+                    width: "100%",
+                    height: "100%",
+                    objectPosition: "60% 120%",
+                    transform: "translateX(-9%) scale(1.18)",
+                    transformOrigin: "left center",
+                    display: "block",
+                  }}
+                />
+              </Box>
+
               <Box>
                 <Typography variant="h5" fontWeight={700}>
                   Support-Ticket erstellen
@@ -284,16 +416,11 @@ const selectedCategory = form.watch("category");
               connector={<StepConnectorGreen />}
               sx={{
                 my: 3,
-                "& .MuiStepIcon-root": {
-                  fontSize: "1.8rem",             
-                },
+                "& .MuiStepIcon-root": { fontSize: "1.8rem" },
                 "& .MuiStepLabel-label": { color: "#667085" },
                 "& .Mui-active .MuiStepLabel-label": { color: "primary.main", fontWeight: 600 },
                 "& .Mui-completed .MuiStepLabel-label": { color: "primary.main", fontWeight: 600 },
-                "& .MuiStepIcon-text": {
-                  fill: "#fff",                     
-                  fontWeight: 700,
-    },
+                "& .MuiStepIcon-text": { fill: "#fff", fontWeight: 700 },
               }}
             >
               {steps.map((s) => (
@@ -305,25 +432,32 @@ const selectedCategory = form.watch("category");
 
             {active === 0 && (
               <FormProvider {...form}>
-                <Box component="form" onSubmit={handleSubmit(onSubmit)} noValidate>
-                  {/* Kategorie-Select außerhalb der Gruppen */}
+                {/* kein handleSubmit; wir triggern gezielt nur Step-1-Felder */}
+                <Box component="form" onSubmit={(e)=>{e.preventDefault(); nextFromStep1();}} noValidate>
+                  {/* Kategorie-Select */}
                   <Grid container spacing={2} sx={{ mb: 1 }}>
                     <Grid item xs={12} md={6}>
-                      <TextField select fullWidth label="Kategorie *" size="medium"
-                      InputLabelProps={{ shrink: true }}
-                      SelectProps={{ displayEmpty: true, renderValue: (val) => val ? (categories.find(c=>c.key===val)?.label ?? val) : "Kategorie auswählen …" }}
-                      sx={{ 
-                        "& .MuiOutlinedInput-root": {
-                          borderRadius: 2,                   
-                          backgroundColor: "#f9f9f9",       
-                          "&:hover": { backgroundColor: "#f1f1f1" },  // Hover-Effekt
-                        },
-                        "& fieldset": {
-                          borderRadius: 1,             // NEU! wichtig: auch Fieldset abrunden
-                        },
-                        "& .MuiOutlinedInput-input": { py: 2.0, fontSize: "1.05rem" }, "& .MuiSelect-select": { py: 2.0, display: "flex", alignItems: "center" }, "& .MuiInputBase-root": { borderRadius: 3 } }}
-                      {...form.register("category")}>
-
+                      <TextField
+                        select fullWidth label="Kategorie *" size="medium"
+                        InputLabelProps={{ shrink: true }}
+                        SelectProps={{
+                          displayEmpty: true,
+                          renderValue: (val) =>
+                            val ? (categories.find(c=>c.key===val)?.label ?? val) : "Kategorie auswählen …"
+                        }}
+                        sx={{ 
+                          "& .MuiOutlinedInput-root": {
+                            borderRadius: 2,
+                            backgroundColor: "#f9f9f9",
+                            "&:hover": { backgroundColor: "#f1f1f1" },
+                          },
+                          "& fieldset": { borderRadius: 1 },
+                          "& .MuiOutlinedInput-input": { py: 2.0, fontSize: "1.05rem" },
+                          "& .MuiSelect-select": { py: 2.0, display: "flex", alignItems: "center" },
+                          "& .MuiInputBase-root": { borderRadius: 3 }
+                        }}
+                        {...form.register("category")}
+                      >
                         {categories.map((c) => (
                           <MenuItem key={c.key} value={c.key}>
                             {c.label}
@@ -333,21 +467,20 @@ const selectedCategory = form.watch("category");
                     </Grid>
                   </Grid>
 
-                  {/* Dynamik nach JSON: Step 1 */}
+                  {/* Step 1: Base (ohne Kontakt) + Kategorie-Felder */}
                   {selectedCategory ? (
-                  <GroupedFields fields={allFields} form={form} step={1} />
-                ) : (
-                  <Typography variant="body2" color="text.secondary" sx={{ mt: 2 }}>
-                    Bitte wählen Sie zuerst eine Kategorie aus, um das Formular anzuzeigen.
-                  </Typography>
-                )} 
+                    <GroupedFields fields={step1Fields} form={form} step={1} />  //NEU!
+                  ) : (
+                    <Typography variant="body2" color="text.secondary" sx={{ mt: 2 }}>
+                      Bitte wählen Sie zuerst eine Kategorie aus, um das Formular anzuzeigen.
+                    </Typography>
+                  )} 
 
                   <Stack direction="row" justifyContent="flex-end" mt={3}>
-                    <Button sx={{
-                      backgroundColor: '#7BB31A',
-                      color: '#fff',
-                      '&:hover': { backgroundColor: '#6aa115' }
-                    }} type="submit" variant="contained" endIcon={<span>→</span>}>
+                    <Button
+                      sx={{ backgroundColor: '#7BB31A', color: '#fff', '&:hover': { backgroundColor: '#6aa115' } }}
+                      type="submit" variant="contained" endIcon={<span>→</span>}
+                    >
                       Weiter
                     </Button>
                   </Stack>
@@ -356,20 +489,44 @@ const selectedCategory = form.watch("category");
             )}
 
             {active === 1 && (
-              <Box>
-                {/* Dynamik nach JSON: Step 2 */}
-                <GroupedFields fields={allFields} form={form} step={2} />
-                <Stack direction="row" justifyContent="space-between" mt={3}>
-                  <Button color="primary" onClick={() => setActive(0)}>Zurück</Button>
-                  <Button sx={{
-                    backgroundColor: '#7BB31A',
-                    color: '#fff',
-                    '&:hover': { backgroundColor: '#6aa115' }
-                  }} variant="contained" onClick={() => setActive(2)}>
-                    Weiter
-                  </Button>
-                </Stack>
-              </Box>
+              <FormProvider {...form}>
+                <Box>
+                  {/* Step 2: Kontaktfelder (dynamische Keys) */}
+                  <Grid container spacing={2} sx={{ mt: 1 }}>
+                    <Grid item xs={12} md={6}>
+                      <TextField
+                        fullWidth required label="Name *"
+                        {...register(contactNameKey)} //NEU!
+                        onBlur={() => setContactTouched((t)=>({...t, name:true}))}
+                        error={contactTouched.name && !nameVal.trim()}
+                        helperText={contactTouched.name && !nameVal.trim() ? "Name ist erforderlich" : " "}
+                      />
+                    </Grid>
+                    <Grid item xs={12} md={6}>
+                      <TextField
+                        fullWidth required label="E-Mail *"
+                        {...register(contactEmailKey)} //NEU!
+                        onBlur={() => setContactTouched((t)=>({...t, email:true}))}
+                        error={contactTouched.email && (!emailVal.trim() || emailInvalid)}
+                        helperText={
+                          contactTouched.email && (!emailVal.trim() || emailInvalid)
+                            ? "Gültige E-Mail erforderlich" : " "
+                        }
+                      />
+                    </Grid>
+                  </Grid>
+
+                  <Stack direction="row" justifyContent="space-between" mt={3}>
+                    <Button color="primary" onClick={() => setActive(0)}>Zurück</Button>
+                    <Button
+                      sx={{ backgroundColor: '#7BB31A', color: '#fff', '&:hover': { backgroundColor: '#6aa115' } }}
+                      variant="contained" onClick={nextFromStep2}
+                    >
+                      Weiter
+                    </Button>
+                  </Stack>
+                </Box>
+              </FormProvider>
             )}
 
             {active === 2 && (
@@ -377,21 +534,64 @@ const selectedCategory = form.watch("category");
                 <Typography variant="h6" gutterBottom>
                   Übersicht
                 </Typography>
-                {/* Werte anzeigen und final absenden */}
+
+                {/* Übersicht: Base (ohne Kontakt) + Kategorie + Kontakt */}
+                <Grid container spacing={4} sx={{ mb: 2 }}>
+                  <Grid item xs={12} md={7}>
+                    <Typography variant="subtitle1">Allgemein</Typography>
+                    <List dense>
+                      <ListItem>
+                        <ListItemText
+                          primary="Kategorie"
+                          secondary={categories.find(c=>c.key===valuesAll?.category)?.label
+                            ?? valuesAll?.category ?? "—"}
+                        />
+                      </ListItem>
+
+                      {baseNoContact.map(f => (
+                        <ListItem key={`base-${f.name}`}>
+                          <ListItemText
+                            primary={f.label ?? f.name}
+                            secondary={String(valuesAll?.[f.name] ?? "—")}
+                          />
+                        </ListItem>
+                      ))}
+
+                      {categoryFields.map(f => (
+                        <ListItem key={`cat-${f.name}`}>
+                          <ListItemText
+                            primary={f.label ?? f.name}
+                            secondary={String(valuesAll?.[f.name] ?? "—")}
+                          />
+                        </ListItem>
+                      ))}
+                    </List>
+                  </Grid>
+
+                  <Grid item xs={12} md={5}>
+                    <Typography variant="subtitle1">Kontaktdaten</Typography>
+                    <List dense>
+                      <ListItem>
+                        <ListItemText primary="Name"  secondary={nameVal || "—"} />
+                      </ListItem>
+                      <ListItem>
+                        <ListItemText primary="E-Mail" secondary={emailVal || "—"} />
+                      </ListItem>
+                    </List>
+                  </Grid>
+                </Grid>
+
                 <Stack direction="row" justifyContent="space-between" mt={2}>
-                  <Button sx={{
-                    backgroundColor: '#7BB31A',
-                    color: '#fff',
-                    '&:hover': { backgroundColor: '#6aa115' }
-                  }} onClick={() => setActive(1)}>Zurück</Button>
+                  <Button
+                    sx={{ backgroundColor: '#7BB31A', color: '#fff', '&:hover': { backgroundColor: '#6aa115' } }}
+                    onClick={() => setActive(1)}
+                  >
+                    Zurück
+                  </Button>
                   <Button
                     variant="contained"
-                    sx={{
-                      backgroundColor: '#7BB31A',
-                      color: '#fff',
-                      '&:hover': { backgroundColor: '#6aa115' }
-                    }}
-                    onClick={form.handleSubmit(submitFinal)}
+                    sx={{ backgroundColor: '#7BB31A', color: '#fff', '&:hover': { backgroundColor: '#6aa115' } }}
+                    onClick={() => submitFinal(form.getValues())}
                   >
                     Absenden
                   </Button>
@@ -407,7 +607,7 @@ const selectedCategory = form.watch("category");
           open
           autoHideDuration={2500}
           onClose={() => setSnack((s) => ({ ...s, open: false }))}
-          anchorOrigin={{ vertical: 'bottom', horizontal: 'right' }} // optional
+          anchorOrigin={{ vertical: 'bottom', horizontal: 'right' }}
         >
           <Alert severity={snack.sev} variant="filled">
             {snack.msg}
