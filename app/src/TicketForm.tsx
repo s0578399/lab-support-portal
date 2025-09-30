@@ -340,7 +340,7 @@ const selectedCategory = form.watch("category");
                   <Typography variant="body2" color="text.secondary" sx={{ mt: 2 }}>
                     Bitte wählen Sie zuerst eine Kategorie aus, um das Formular anzuzeigen.
                   </Typography>
-                )} //NEU!
+                )} 
 
                   <Stack direction="row" justifyContent="flex-end" mt={3}>
                     <Button sx={{
