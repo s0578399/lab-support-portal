@@ -3,7 +3,8 @@ version: "3.9"
 services:
   frontend:
     build:
-      context: ./app
+      context: .                       
+      dockerfile: app/Dockerfile       
     image: lab-support-portal-frontend:latest
     depends_on:
       - api
