@@ -4,6 +4,19 @@ FROM node:22-alpine AS build
 WORKDIR /app
 # package files aus app/
 COPY app/package*.json ./
+# --- Proxy ins Image holen (wird über build args gesetzt) ---
+ARG HTTP_PROXY
+ARG HTTPS_PROXY
+ARG NO_PROXY
+ENV HTTP_PROXY=${HTTP_PROXY}
+ENV HTTPS_PROXY=${HTTPS_PROXY}         
+ENV NO_PROXY=${NO_PROXY}                        
+
+# NPM so konfigurieren, dass es den Proxy nutzt             
+RUN if [ -n "$HTTP_PROXY" ]; then npm config set proxy "$HTTP_PROXY"; fi     
+RUN if [ -n "$HTTPS_PROXY" ]; then npm config set https-proxy "$HTTPS_PROXY"; fi 
+RUN npm config set fetch-retry-maxtimeout 120000                                   
+RUN npm config set fund false && npm config set audit false                       
 RUN npm ci
 
 # ganzen app-Code + Vite-Config rein

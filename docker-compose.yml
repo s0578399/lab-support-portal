@@ -1,45 +1,38 @@
-version: "3.9"
-
 services:
-  frontend:
-    build:
-      context: ./app
-    image: lab-support-portal-frontend:latest
-    depends_on:
-      - api
-    ports:
-      - "80:80"
-    environment:
-      - VITE_API_BASE=/api
-    restart: unless-stopped
-
-  api:
+  backend:
     build:
       context: ./api
-    image: lab-support-portal-api:latest
-    environment:
-      - NODE_ENV=production
-      - PORT=3000
-      - ALLOWED_ORIGINS=${ALLOWED_ORIGINS}
-      - SMTP_HOST=mailhog
-      - SMTP_PORT=1025
-      - SMTP_SECURE=false
-      - SMTP_USER=
-      - SMTP_PASS=
-      - MAIL_FROM=Ticket Portal <no-reply@local.test>
-      - MAIL_TO=support@example.invalid
-    expose:
-      - "3000"
-    depends_on:
-      - mailhog
+      dockerfile: Dockerfile
+    container_name: ticket-backend
+    env_file:
+      - .env
+    ports:
+      - "3000:3000"
     volumes:
       - ./config/form.schema.json:/config/form.schema.json:ro
     restart: unless-stopped
+    networks: [appnet]
+
+  frontend:
+    build:
+      context: .
+      dockerfile: app/Dockerfile
+    container_name: ticket-frontend
+    ports:
+      - "80:80"
+    depends_on: [backend]
+    restart: unless-stopped
+    networks: [appnet]
 
   mailhog:
     image: mailhog/mailhog:latest
+    container_name: mailhog
     ports:
+      - "1025:1025"
       - "8025:8025"
-    expose:
-      - "1025"
     restart: unless-stopped
+    networks: [appnet]
+
+networks:
+  appnet:
+    driver: bridge
