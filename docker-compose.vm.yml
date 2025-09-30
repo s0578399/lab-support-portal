@@ -4,7 +4,11 @@ services:
   frontend:
     build:
       context: .                       
-      dockerfile: app/Dockerfile       
+      dockerfile: app/Dockerfile
+    args:
+        HTTP_PROXY: "http://webproxy.rz.htw-berlin.de:3128/"
+        HTTPS_PROXY: "http://webproxy.rz.htw-berlin.de:3128/"
+        NO_PROXY: "localhost,127.0.0.1,::1,api,frontend,mailhog,it-service-wi-test.f4.htw-berlin.de"
     image: lab-support-portal-frontend:latest
     depends_on:
       - api
