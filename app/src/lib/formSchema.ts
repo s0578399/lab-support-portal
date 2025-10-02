@@ -1,5 +1,8 @@
 // app/src/lib/formSchema.ts
 import { z, type ZodTypeAny } from "zod";
+import { deErrorMap } from "./zodErrorMapDE";
+z.setErrorMap(deErrorMap);
+
 
 /** Option in JSON: string ODER {value,label} */
 export type Option = string | { value: string; label: string };

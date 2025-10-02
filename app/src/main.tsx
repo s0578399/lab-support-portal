@@ -3,7 +3,10 @@ import { createRoot } from 'react-dom/client'
 import './index.css'
 import App from './App.tsx'
 import { GlobalStyles } from "@mui/material";
-
+import { deDE } from "@mui/material/locale";
+import { z } from "zod";
+import { deErrorMap } from "./lib/zodErrorMapDE";
+z.setErrorMap(deErrorMap);
 
 
 import { CssBaseline, ThemeProvider, createTheme } from '@mui/material' 
@@ -23,7 +26,7 @@ const theme = createTheme({
     h6: { fontWeight: 600 }, // Abschnittsüberschriften/Stepper
     button: { textTransform: 'none', fontWeight: 600 }, // Buttons wie "Weiter"
   },
-})
+}, deDE);
 
 createRoot(document.getElementById('root')!).render(
   <StrictMode>

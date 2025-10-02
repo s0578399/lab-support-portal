@@ -12,9 +12,10 @@ import Step from '@mui/material/Step';
 import StepLabel from '@mui/material/StepLabel';   
 import NumberStepIcon from '../components/NumberStepIcon'; 
 import StepConnectorGreen from '../components/StepConnectorGreen'; 
+import { deDE } from "@mui/material/locale";
 
 export default function App() {
-  const theme = useMemo(() => createTheme(baseTheme), []);
+  const theme = useMemo(() => createTheme(baseTheme), [], deDE);
   const [snack, setSnack] = useState<{
     open: boolean; message: string; severity: 'success' | 'error'
   }>({ open: false, message: '', severity: 'success' });

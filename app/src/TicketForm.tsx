@@ -108,7 +108,7 @@ export default function TicketForm() {
   // außerhalb der useForm-Konfiguration
   const selectedCategory = form.watch("category");
 
-  const { watch, reset, getValues, register, trigger } = form; //NEU!
+  const { watch, reset, getValues, register, trigger } = form;
   const currentKey = watch("category") || defaultCat;
   const currentCat: Category | undefined = categories.find((c) => c.key === currentKey);
   
@@ -123,8 +123,8 @@ export default function TicketForm() {
   // --- Feldgruppen vorbereiten -----------------------------------
   const baseFields = useMemo(() => cfg.baseFields ?? [], [cfg.baseFields]);
 
-  // NEU! Kontaktfeld-Namen automatisch erkennen (aus baseFields)
-  const CONTACT_KEYS = useMemo(() => { //NEU!
+  // Kontaktfeld-Namen automatisch erkennen (aus baseFields)
+  const CONTACT_KEYS = useMemo(() => { 
     const keys = new Set<string>();
     (cfg.baseFields ?? []).forEach((f) => {
       const n = String(f?.name ?? "");
@@ -132,26 +132,26 @@ export default function TicketForm() {
       if (["name", "fullname", "vorname", "nachname", "requestername"].includes(l)) keys.add(n);
       if (["email", "e-mail", "mail", "requesteremail"].includes(l) || f.type === "email") keys.add(n);
     });
-    if (keys.size === 0) { keys.add("name"); keys.add("email"); } // Fallback
+    if (keys.size === 0) { keys.add("name"); keys.add("email"); } 
     return keys;
-  }, [cfg.baseFields]); //NEU!
+  }, [cfg.baseFields]);
 
-  const contactNameKey = useMemo( //NEU!
+  const contactNameKey = useMemo( 
     () => [...CONTACT_KEYS].find((k) => /name/i.test(k)) ?? "name",
     [CONTACT_KEYS]
   );
-  const contactEmailKey = useMemo( //NEU!
+  const contactEmailKey = useMemo( 
     () => [...CONTACT_KEYS].find((k) => /(email|mail)/i.test(k)) ?? "email",
     [CONTACT_KEYS]
   );
 
-  const baseNoContact = useMemo( //NEU!
+  const baseNoContact = useMemo( 
     () => (cfg.baseFields ?? []).filter((f) => !CONTACT_KEYS.has(f.name)),
     [cfg.baseFields, CONTACT_KEYS]
   );
 
   const categoryFields = useMemo(() => currentCat?.fields ?? [], [currentCat]);
-  const step1Fields = useMemo( //NEU!
+  const step1Fields = useMemo( 
     () => [...baseNoContact, ...categoryFields],
     [baseNoContact, categoryFields]
   );
@@ -167,7 +167,7 @@ export default function TicketForm() {
   async function nextFromStep1() { //NEU!
     const ok = await trigger(step1FieldNames as any);
     if (!ok) {
-      setSnack({ open: true, msg: "Bitte Pflichtfelder in Schritt 1 prüfen.", sev: "error" });
+      setSnack({ open: true, msg: "Bitte Pflichtfelder prüfen.", sev: "error" });
       return;
     }
     setSnack({ open: true, msg: "Validierung OK – weiter zu Kontaktdaten", sev: "success" });
@@ -177,11 +177,11 @@ export default function TicketForm() {
   // Name/E-Mail (hart, aber RHF-registriert)
   const [contactTouched, setContactTouched] = useState({ name: false, email: false });
   const valuesAll = watch(); // re-render bei Feldänderungen
-  const nameVal  = String(valuesAll?.[contactNameKey] ?? ""); //NEU!
-  const emailVal = String(valuesAll?.[contactEmailKey] ?? ""); //NEU!
-  const emailInvalid = emailVal.trim().length > 0 && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(emailVal); //NEU!
+  const nameVal  = String(valuesAll?.[contactNameKey] ?? ""); 
+  const emailVal = String(valuesAll?.[contactEmailKey] ?? ""); 
+  const emailInvalid = emailVal.trim().length > 0 && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(emailVal);
 
-  function nextFromStep2() { //NEU!
+  function nextFromStep2() { 
     const nameOk = !!nameVal.trim();
     const emailOk = !!emailVal.trim() && !emailInvalid;
     setContactTouched({ name: true, email: true });
@@ -282,7 +282,7 @@ export default function TicketForm() {
   }
 
   // Payload zusammenbauen (filtern + normalisieren)
-  function buildPayload(values: Record<string, any>) { //NEU!
+  function buildPayload(values: Record<string, any>) { 
     const allow = allowedKeysForCurrent();
     const out: Record<string, any> = {};
     for (const [k, v] of Object.entries(values)) {
@@ -469,7 +469,7 @@ export default function TicketForm() {
 
                   {/* Step 1: Base (ohne Kontakt) + Kategorie-Felder */}
                   {selectedCategory ? (
-                    <GroupedFields fields={step1Fields} form={form} step={1} />  //NEU!
+                    <GroupedFields fields={step1Fields} form={form} step={1} />  
                   ) : (
                     <Typography variant="body2" color="text.secondary" sx={{ mt: 2 }}>
                       Bitte wählen Sie zuerst eine Kategorie aus, um das Formular anzuzeigen.
@@ -496,7 +496,7 @@ export default function TicketForm() {
                     <Grid item xs={12} md={6}>
                       <TextField
                         fullWidth required label="Name *"
-                        {...register(contactNameKey)} //NEU!
+                        {...register(contactNameKey)} 
                         onBlur={() => setContactTouched((t)=>({...t, name:true}))}
                         error={contactTouched.name && !nameVal.trim()}
                         helperText={contactTouched.name && !nameVal.trim() ? "Name ist erforderlich" : " "}
@@ -505,7 +505,7 @@ export default function TicketForm() {
                     <Grid item xs={12} md={6}>
                       <TextField
                         fullWidth required label="E-Mail *"
-                        {...register(contactEmailKey)} //NEU!
+                        {...register(contactEmailKey)} 
                         onBlur={() => setContactTouched((t)=>({...t, email:true}))}
                         error={contactTouched.email && (!emailVal.trim() || emailInvalid)}
                         helperText={
