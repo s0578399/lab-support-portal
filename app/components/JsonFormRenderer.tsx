@@ -1,6 +1,6 @@
 // app/components/JsonFormRenderer.tsx
 import * as React from "react";
-import { TextField, MenuItem, Box, Grid } from "@mui/material";
+import { TextField, MenuItem, Box, Grid, FormLabel } from "@mui/material";
 import { Controller, type UseFormReturn, useWatch } from "react-hook-form";
 import type { Field } from "../src/lib/formSchema";
 import { helpers, visibleByShowIf } from "../src/lib/formSchema";
@@ -388,7 +388,7 @@ export default function JsonFormRenderer<T extends Record<string, any>>({ fields
               );
             }
 
-            // FILE
+            // FILE (ästhetische Button-Variante; Input versteckt)
             if (f.type === "file") {
               return (
                 <Grid key={itemKey} item {...itemProps} sx={{ minWidth: 0 }}>
@@ -396,35 +396,72 @@ export default function JsonFormRenderer<T extends Record<string, any>>({ fields
                     <Controller
                       name={f.name as any}
                       control={control}
-                      render={({ field, fieldState }) => (
-                        <div>
-                          <input
-                            type="file"
-                            name={f.name}
-                            accept={
-                              Array.isArray((f as any).accept)
-                                ? (f as any).accept.join(",")
-                                : (f as any).accept
-                            }
-                            onChange={(e) => {
-                              const fl = e.target.files;
-                              const file = fl && fl.length > 0 ? fl[0] : null;
-                              field.onChange(file);
-                            }}
-                          />
-                          {fieldState.error && (
-                            <Box sx={{ color: "error.main", fontSize: 12, mt: 0.5 }}>
-                              {fieldState.error.message}
+                      render={({ field, fieldState }) => {
+                        const inputId = `${String(f.name)}-file`;
+                        return (
+                          <div>
+                            <FormLabel htmlFor={inputId} required={!!f.required}>
+                              {f.label || "Datei hochladen"}
+                            </FormLabel>
+
+                            <Box sx={{ mt: 1, display: "flex", alignItems: "center", gap: 1 }}>
+                              {/* Verstecktes natives Input */}
+                              <input
+                                id={inputId}
+                                type="file"
+                                name={f.name as string}
+                                hidden
+                                accept={
+                                  Array.isArray((f as any).accept)
+                                    ? (f as any).accept.join(",")
+                                    : (f as any).accept
+                                }
+                                onChange={(e) => {
+                                  const fl = e.currentTarget.files;
+                                  const file = fl && fl.length > 0 ? fl[0] : null;
+                                  field.onChange(file);
+                                }}
+                              />
+
+                              {/* „Button“-Look mit Box als Label */}
+                              <Box
+                                component="label"
+                                htmlFor={inputId}
+                                sx={{
+                                  display: "inline-flex",
+                                  alignItems: "center",
+                                  px: 1.5,
+                                  py: 0.75,
+                                  border: "1px solid #E5E7EB",
+                                  borderRadius: 1,
+                                  cursor: "pointer",
+                                  userSelect: "none",
+                                  "&:hover": { backgroundColor: "#F9FAFB" }
+                                }}
+                              >
+                                Datei auswählen
+                              </Box>
+
+                              {/* Dateiname */}
+                              <span style={{ fontSize: 14, color: "#555" }}>
+                                {field.value ? (field.value as any).name : "Keine Datei ausgewählt"}
+                              </span>
                             </Box>
-                          )}
-                        </div>
-                      )}
+
+                            {fieldState.error && (
+                              <Box sx={{ color: "error.main", fontSize: 12, mt: 0.5 }}>
+                                {fieldState.error.message}
+                              </Box>
+                            )}
+                          </div>
+                        );
+                      }}
                     />
                   </Box>
                 </Grid>
               );
             }
-
+            
             return <React.Fragment key={itemKey} />;
           })}
         </Grid>

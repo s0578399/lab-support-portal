@@ -1,18 +1,32 @@
-// api/src/schema.js
-import { readFileSync } from 'node:fs';
-import { fileURLToPath } from 'node:url';
-import { dirname, resolve } from 'node:path';
+//NEU!
+import { readFileSync, existsSync } from 'node:fs';        //NEU!
+import path from 'node:path';                               //NEU!
+import { fileURLToPath } from 'node:url';                   //NEU!
 
+//NEU! __dirname für ESM
+const __filename = fileURLToPath(import.meta.url);          //NEU!
+const __dirname = path.dirname(__filename);                 //NEU!
 
-// __filename und __dirname nachbilden (ESM hat das nicht nativ)
-// → wir brauchen das, um den Pfad zur config-Datei korrekt zu bestimmen
-const __filename = fileURLToPath(import.meta.url);
-const __dirname = dirname(__filename);
+//NEU! 1) optionaler Override via Env (praktisch für Tests/CI)
+const overridePath = process.env.FORM_SCHEMA_PATH
+  ? path.resolve(process.env.FORM_SCHEMA_PATH)
+  : null;                                                  //NEU!
 
-// eine Ebene hoch aus api/, dann config/form.schema.json
-const schemaPath = resolve(__dirname, '../../config/form.schema.json');
+//NEU! 2) Standard-Suchreihenfolge (robust bei verschiedenen Start-Dirs)
+const candidates = [
+  overridePath,
+  path.resolve(__dirname, '../../config/form.schema.json'), // api/src -> ../../config
+  path.resolve(process.cwd(), '../config/form.schema.json'),// falls aus api/ gestartet
+  path.resolve(process.cwd(), 'config/form.schema.json'),   // falls aus Repo-Root gestartet
+].filter(Boolean);                                          //NEU!
 
-// JSON-Schema einmalig einlesen und parsen
-// - Enthält alle Basisfelder und Kategorien
-// - Wird von Server-Logik (Validation, Mail) und Client gleichermaßen genutzt
-export const schema = JSON.parse(readFileSync(schemaPath, 'utf-8'));
+let schemaFile = null;                                      //NEU!
+for (const p of candidates) {                               //NEU!
+  if (existsSync(p)) { schemaFile = p; break; }             //NEU!
+}                                                           //NEU!
+
+if (!schemaFile) {                                          //NEU!
+  throw new Error(`form.schema.json nicht gefunden. Versuchte Pfade:\n${candidates.join('\n')}`); //NEU!
+}                                                           //NEU!
+
+export const schema = JSON.parse(readFileSync(schemaFile, 'utf-8')); //NEU!
