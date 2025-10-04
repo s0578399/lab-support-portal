@@ -1,5 +1,9 @@
+import path from "node:path";                
+import { fileURLToPath } from "node:url";    
+const __filename = fileURLToPath(import.meta.url); 
+const __dirname  = path.dirname(__filename);
 import request from "supertest";
-import { createServer } from "../src/server.js"; // passe den Pfad an!
+import { createServer } from "../src/server.js";
 
 const app = createServer();
 
@@ -16,8 +20,6 @@ describe("POST /api/tickets (Procurement)", () => {
       .field("category", "Procurement")              // wichtig: Kategorie-Key
 
       // Category: Procurement
-      .field("applicantName", "Max Mustermann")
-      .field("applicantTitle", "Prof. Dr.")
       .field("applicantRole", "Dozent")
       .field("costCenter", "12345")
       .field("requestType", "Hardware")
@@ -25,15 +27,17 @@ describe("POST /api/tickets (Procurement)", () => {
       .field("justification", "Aktuelles Gerät ist defekt, Ersatz dringend benötigt.")
       .field("quantity", "2")
       .field("unit", "Stück")
-      .field("priority", "very_high")
+
 
       // Datei-Uploads (Pflichtfelder)
-      .attach("vergabeFile", path.join(__dirname, "fixtures", "dummy.pdf"))
-      .attach("belegFile", path.join(__dirname, "fixtures", "dummy.pdf"));
+      .attach("vergabeFile", path.join(__dirname, "fixtures", "dummy pdf.pdf")) 
+      .attach("belegFile",   path.join(__dirname, "fixtures", "dummy pdf.pdf"));
 
+    console.log("DEBUG status/body", res.status, res.body);
     expect(res.status).toBe(200);
     expect(res.body).toHaveProperty("ok", true);
   });
+
 
 
   it("Invalid Input (fehlende Pflichtfelder) → 400", async () => {

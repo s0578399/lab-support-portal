@@ -101,6 +101,7 @@ function collectAttachments(catDef, files) {
 }
 
 
+
 // === Hauptfunktion ===
 // Baut und verschickt die Support-Mail für ein Ticket.
 // - Stellt SMTP-Transport her
@@ -108,6 +109,12 @@ function collectAttachments(catDef, files) {
 // - Baut Subject, Body, Attachments
 // - Übergibt alles an Nodemailer
 export async function sendTicketMail(data, files = {}) {
+  
+  // Test-Bypass: Mailversand im Test abschalten
+  if (String(process.env.MAIL_DISABLED) === '1') {
+    return { messageId: 'TEST-BYPASS' };
+  }
+
   const tr = transport();
   const from = process.env.FROM_ADDR ?? 'tickets@hochschule.local';
   const to   = process.env.TICKET_EINGANG ?? 'ticketsystem@hochschule.local';

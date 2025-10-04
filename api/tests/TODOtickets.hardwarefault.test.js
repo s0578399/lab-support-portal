@@ -21,7 +21,6 @@ describe("POST /api/tickets (Hardware-Fault)", () => {
       .field("deviceType", "Beamer")
       .field("inventoryNumber", "INV-4711")
       .field("errorDescription", "Beamer geht nach 5 Minuten aus.")
-      .field("priority", "hoch") // Kategorie-Priorisierung
       .field("reproSteps", "Beamer starten, nach kurzer Zeit geht er aus.");
 
     expect(res.status).toBe(200);

@@ -1,6 +1,10 @@
 import { jest } from "@jest/globals";
-import path from "path";
-import { fileURLToPath } from "url";
+
+
+import path from "node:path";                 
+import { fileURLToPath } from "node:url";      
+const __filename = fileURLToPath(import.meta.url); 
+const __dirname  = path.dirname(__filename);
 
 // 1) Vor dem Import des Servers: Mailservice mocken → Mailversand schlägt garantiert fehl
 jest.unstable_mockModule("../src/services/mailService.js", () => ({
@@ -11,9 +15,6 @@ jest.unstable_mockModule("../src/services/mailService.js", () => ({
 const { createServer } = await import("../src/server.js");
 const request = (await import("supertest")).default;
 
-// __dirname in ESM herstellen
-const __filename = fileURLToPath(import.meta.url);
-const __dirname = path.dirname(__filename);
 
 const app = createServer();
 
@@ -30,8 +31,6 @@ describe("POST /api/tickets (Procurement) → 502 bei Mail-Fehler", () => {
       // Kategorie
       .field("category", "Procurement")
       // Procurement required fields
-      .field("applicantName", "Max Mustermann")
-      .field("applicantTitle", "Prof. Dr.")
       .field("applicantRole", "Dozent")
       .field("costCenter", "KST-12345")
       .field("requestType", "Hardware")
@@ -39,11 +38,12 @@ describe("POST /api/tickets (Procurement) → 502 bei Mail-Fehler", () => {
       .field("justification", "Aktuelles Gerät ist defekt, Ersatz dringend benötigt.")
       .field("quantity", "2")
       .field("unit", "Stück")
-      .field("priority", "very_high") // Kategorie-eigene Priorität
-      // Pflicht-Uploads
-      .attach("vergabeFile", path.join(__dirname, "fixtures", "dummy.pdf"))
-      .attach("belegFile", path.join(__dirname, "fixtures", "dummy.pdf"));
+      
+      // Pflicht-Uploads      
+      .attach("vergabeFile", path.join(__dirname, "fixtures", "dummy pdf.pdf")) 
+      .attach("belegFile",   path.join(__dirname, "fixtures", "dummy pdf.pdf")); 
 
+    console.log("DEBUG status/body", res.status, res.body);
     expect(res.status).toBe(502);
     expect(res.body).toEqual({ error: "Mail Failed" });
   });

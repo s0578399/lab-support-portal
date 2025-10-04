@@ -6,8 +6,7 @@
   "scripts": {
     "start": "node src/index.js",
     "dev": "NODE_ENV=development node src/index.js",
-    "test": "jest --runInBand",
-    "e2e": "playwright test"
+    "test": "cross-env NODE_ENV=test MAIL_DISABLED=1 NODE_OPTIONS=--experimental-vm-modules FORM_SCHEMA_PATH=../config/form.schema.json jest --runInBand"
   },
   "dependencies": {
     "cors": "^2.8.5",
@@ -18,5 +17,11 @@
     "multer": "^2.0.2",
     "nodemailer": "^7.0.5",
     "zod": "^3.23.8"
+  },
+  "devDependencies": {
+    "@types/jest": "^30.0.0",
+    "cross-env": "^10.1.0",
+    "jest": "^29.7.0",
+    "supertest": "^7.1.4"
   }
 }
