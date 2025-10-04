@@ -405,7 +405,7 @@ export default function TicketForm() {
                   Support-Ticket erstellen
                 </Typography>
                 <Typography color="text.secondary">
-                  IT-Support Hochschule für Technik und Wirtschaft Berlin
+                  Support-Ticket im Studiengang Wirtschaftsinformatik
                 </Typography>
               </Box>
             </Stack>
