@@ -25,10 +25,10 @@ export type Field = {
   step?: number;          // 1..n
   section?: string;       // z.B. "Kosten"
   col?: number;           // 1..12
-  /** Nur für Datei-Felder */           //NEU!!
-  accept?: string[] | string;           //NEU!!
-  maxSizeMB?: number;                   //NEU!!
-  multiple?: boolean;                   //NEU!!
+  /** Nur für Datei-Felder */         
+  accept?: string[] | string;       
+  maxSizeMB?: number;                   
+  multiple?: boolean;                  
 };
 
 // Layout-Defaults

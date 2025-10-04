@@ -8,7 +8,7 @@
           "step": 1, "section": "Angaben zur Person", "placeholder": "z.B. Prof. Dr.",
           "ui": { "layout": { "xs": 12, "sm": 12, "md": 4, "lg": 4 } }
         },
-        { "name": "applicantRole", "label": "Rolle", "type": "text", "required": true,
+        { "name": "applicantRole", "label": "Rolle", "type": "text", "required": false,
           "step": 1, "section": "Angaben zur Person", "placeholder": "z.B. Dozent",
           "ui": { "layout": { "xs": 12, "sm": 12, "md": 4, "lg": 4 } }
         },
@@ -140,10 +140,6 @@
         { "name": "errorDescription", "label": "Beschreibung des Fehlers", "type": "textarea", "required": true, "minLength": 10, "section": "Fehlerbeschreibung",
           "placeholder": "z.B. Monitor flackert seit 10 Minuten, nur bei 60 Hz …",
           "ui": { "rows": 8, "layout": { "xs": 12, "sm": 12, "md": 12, "lg": 12 } }
-        },
-        { "name": "priority", "label": "Priorisierung", "type": "select", "required": true,
-          "options": ["gering", "mittel", "hoch", "sehr hoch (Blocker)"], "placeholder": "z.B. auswählen …",
-          "ui": { "layout": { "xs": 12, "sm": 12, "md": 12, "lg": 12 } }
         },
         { "name": "reproSteps", "label": "Wie ist der Fehler reproduzierbar?", "type": "textarea", "required": true, "minLength": 10, "section": "Fehlerbeschreibung",
           "placeholder": "z.B. Bei 60 Hz & Helligkeit > 80% tritt Flackern auf …",
