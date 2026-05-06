@@ -1,5 +1,5 @@
 services:
-  backend:
+  api:                  # vorher: 'backend'
     build:
       context: ./api
       dockerfile: Dockerfile
@@ -20,7 +20,7 @@ services:
     container_name: ticket-frontend
     ports:
       - "80:80"
-    depends_on: [backend]
+    depends_on: [api]
     restart: unless-stopped
     networks: [appnet]
 

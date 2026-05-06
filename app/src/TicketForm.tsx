@@ -432,7 +432,7 @@ export default function TicketForm() {
 
             {active === 0 && (
               <FormProvider {...form}>
-                {/* kein handleSubmit; wir triggern gezielt nur Step-1-Felder */}
+                {/* kein handleSubmit; triggert gezielt nur Step-1-Felder */}
                 <Box component="form" onSubmit={(e)=>{e.preventDefault(); nextFromStep1();}} noValidate>
                   {/* Kategorie-Select */}
                   <Grid container spacing={2} sx={{ mb: 1 }}>

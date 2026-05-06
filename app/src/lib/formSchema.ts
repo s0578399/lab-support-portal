@@ -181,7 +181,7 @@ function zodForField(f: Field): ZodTypeAny {
       // 2) Inneres Array-Schema vollständig konfigurieren
       const values = normalizeOptions(f.options).map((o) => o.value);
       let inner = z.array(z.string());
-      if (values.length) { // NEU!!!
+      if (values.length) {
         inner = inner.refine((arr) => arr.every((x) => values.includes(x)), "Ungültige Auswahl");
       }
       if (f.required) { 
